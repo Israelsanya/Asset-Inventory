@@ -135,53 +135,53 @@
     </div>
 
     <script>
+        // --- 1. UI & MENU LOGIC ---
         const menuBtn = document.getElementById('userMenuBtn');
         const dropdown = document.getElementById('userDropdown');
 
         // Toggle dropdown
-        menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('hidden');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+            });
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', () => {
+            if (dropdown) dropdown.classList.add('hidden');
         });
 
-        // Close when clicking outside
-        window.addEventListener('click', () => {
-            dropdown.classList.add('hidden');
-        });
+        // Prevent menu from closing if someone clicks inside the dropdown itself
+        if (dropdown) {
+            dropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
 
         // Logout Functionality
         function handleLogout() {
-            // 1. Clear the session data
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            
-            // 2. Optional: Log to console for debugging
             console.log('Session cleared. Redirecting...');
-            
-            // 3. Redirect to login page
             window.location.href = 'login.html';
         }
 
-        // AUTH GUARD: Simple check to see if user is logged in
+        // AUTH GUARD: Redirect if no token found
         window.onload = function() {
             const token = localStorage.getItem('token');
             if (!token) {
-                // If no token exists, send them back to login immediately
                 window.location.href = 'login.html';
+            } else {
+                loadAssets(); // Only load assets if token exists
             }
         }
 
-        // Prevent menu from closing if someone clicks inside the dropdown itself
-        dropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        //********Function to fetch and display assets************//
+        // --- 2. DATA FETCHING LOGIC ---
         async function loadAssets() {
             const tableBody = document.querySelector('tbody');
             const token = localStorage.getItem('token');
 
-            // 1. Show a loading state in the table
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="8" class="p-10 text-center text-gray-500">
@@ -194,7 +194,7 @@
                 const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`, // Assumes your API uses Bearer tokens
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -202,7 +202,6 @@
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
-                    // 2. Clear table and populate data
                     tableBody.innerHTML = ''; 
 
                     result.data.forEach(asset => {
@@ -228,36 +227,55 @@
                         tableBody.insertAdjacentHTML('beforeend', row);
                     });
 
-                    // Update the count in the footer
                     document.querySelector('.font-medium').innerText = `1 - ${result.data.length} of ${result.count} items`;
 
                 } else {
-                    tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load assets: ${result.message}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load: ${result.message}</td></tr>`;
                 }
             } catch (error) {
                 console.error('Fetch Error:', error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Connection Error. Please ensure the API is reachable.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Connection Error. Ensure API is reachable.</td></tr>`;
             }
         }
 
-        // Helper for the edit button
         function editAsset(id) {
             console.log("Editing asset:", id);
-            // You can redirect to an edit page: window.location.href = `edit.html?id=${id}`;
+            // window.location.href = `edit.html?id=${id}`;
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', loadAssets);
+        // --- 3. INTERACTIVE TABLE LOGIC (SEARCH, SELECT, DELETE) ---
 
-        // Function to filter the table based on search input
+        function updateDeleteButtonVisibility() {
+            const tableBody = document.querySelector('tbody');
+            const deleteBtn = document.getElementById('deleteAssetBtn');
+            const countSpan = document.getElementById('selectionCount');
+            
+            // Only count checkboxes in visible rows
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'))
+                                    .filter(cb => cb.closest('tr').style.display !== 'none');
+            
+            const count = checkedBoxes.length;
+
+            if (count > 0) {
+                deleteBtn.classList.remove('hidden');
+                if (countSpan) {
+                    countSpan.classList.remove('hidden');
+                    countSpan.innerText = `${count} ${count === 1 ? 'Asset' : 'Assets'} Selected`;
+                }
+            } else {
+                deleteBtn.classList.add('hidden');
+                if (countSpan) countSpan.classList.add('hidden');
+            }
+        }
+
         function filterAssets() {
             const searchInput = document.getElementById('searchInput');
             const filter = searchInput.value.toLowerCase();
             const tableRows = document.querySelectorAll('tbody tr');
             const selectAllCheckbox = document.getElementById('selectAll');
 
-            // Uncheck "Select All" when a search starts
-            selectAllCheckbox.checked = false;
+            // Reset "Select All" when a new search starts
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
 
             tableRows.forEach(row => {
                 const text = row.innerText.toLowerCase();
@@ -265,7 +283,7 @@
                     row.style.display = ""; 
                 } else {
                     row.style.display = "none";
-                    // Important: Uncheck hidden rows so they aren't accidentally deleted
+                    // Uncheck if it becomes hidden
                     const cb = row.querySelector('input[type="checkbox"]');
                     if (cb) cb.checked = false;
                 }
@@ -273,90 +291,68 @@
             updateDeleteButtonVisibility();
         }
 
-        //****Attach the event listener to the search input *****//
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearSearch');
-
-            // 1. Monitor typing to show/hide the clear button and filter the table
-            searchInput.addEventListener('input', () => {
-                // Toggle the Clear Button visibility
-                if (searchInput.value.length > 0) {
-                    clearBtn.classList.remove('hidden');
-                } else {
-                    clearBtn.classList.add('hidden');
-                }
-
-                // Filter the table (using the function we wrote previously)
-                filterAssets(); 
-            });
-
-            // 2. Clear the input and reset the table when the "X" is clicked
-            clearBtn.addEventListener('click', () => {
-                searchInput.value = '';             // Clear text
-                clearBtn.classList.add('hidden');   // Hide "X"
-                searchInput.focus();                // Put cursor back in box
-                filterAssets();                     // Reset table to show all rows
-            });
-        });
-
-        //********* "Select All" and Delete Button Logic ***********//
-        document.addEventListener('DOMContentLoaded', () => {
             const selectAllCheckbox = document.getElementById('selectAll');
             const deleteBtn = document.getElementById('deleteAssetBtn');
             const tableBody = document.querySelector('tbody');
 
-            // Function to update Delete Button visibility
-            function updateDeleteButtonVisibility() {
-                const checkedBoxes = tableBody.querySelectorAll('input[type="checkbox"]:checked');
-                if (checkedBoxes.length > 0) {
-                    deleteBtn.classList.remove('hidden');
-                } else {
-                    deleteBtn.classList.add('hidden');
-                }
+            // Search Input Logic
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    if (clearBtn) clearBtn.classList.toggle('hidden', searchInput.value.length === 0);
+                    filterAssets(); 
+                });
             }
 
-            // 1. "Select All" Logic (Updated to respect filters)
-            selectAllCheckbox.addEventListener('change', () => {
-                // We only select rows where the style.display is NOT "none"
-                const allRows = tableBody.querySelectorAll('tr');
-                
-                allRows.forEach(row => {
-                    if (row.style.display !== 'none') {
-                        const cb = row.querySelector('input[type="checkbox"]');
-                        if (cb) cb.checked = selectAllCheckbox.checked;
-                    }
+            // Clear Search Logic
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    clearBtn.classList.add('hidden');
+                    searchInput.focus();
+                    filterAssets();
                 });
-                updateDeleteButtonVisibility();
-            });
+            }
 
-            // 2. Individual Checkbox Logic (using Event Delegation)
+            // Select All Logic
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', () => {
+                    const allRows = tableBody.querySelectorAll('tr');
+                    allRows.forEach(row => {
+                        if (row.style.display !== 'none') {
+                            const cb = row.querySelector('input[type="checkbox"]');
+                            if (cb) cb.checked = selectAllCheckbox.checked;
+                        }
+                    });
+                    updateDeleteButtonVisibility();
+                });
+            }
+
+            // Individual Checkbox Logic (Event Delegation)
             tableBody.addEventListener('change', (e) => {
                 if (e.target.type === 'checkbox') {
                     updateDeleteButtonVisibility();
-                    
-                    // Uncheck "Select All" if one item is manually unchecked
-                    if (!e.target.checked) {
+                    if (!e.target.checked && selectAllCheckbox) {
                         selectAllCheckbox.checked = false;
                     }
                 }
             });
 
-            // 3. Placeholder for your friend's Delete API
-            deleteBtn.addEventListener('click', async () => {
-                const checkedBoxes = tableBody.querySelectorAll('input[type="checkbox"]:checked');
-                const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+            // Delete Button Action
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    const checkedBoxes = tableBody.querySelectorAll('input[type="checkbox"]:checked');
+                    const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
 
-                if (confirm(`Are you sure you want to delete ${idsToDelete.length} asset(s)?`)) {
-                    console.log("IDs to send to API:", idsToDelete);
-                    
-                    // When the API is ready, you'll use:
-                    // await fetch('YOUR_API_URL', { method: 'POST', body: JSON.stringify({ids: idsToDelete}) });
-                    
-                    alert("Delete request sent for IDs: " + idsToDelete.join(', '));
-                    // After deletion, refresh the table: loadAssets();
-                }
-            });
+                    if (confirm(`Are you sure you want to delete ${idsToDelete.length} asset(s)?`)) {
+                        console.log("Deleting IDs:", idsToDelete);
+                        // Insert fetch call to your friend's API here
+                        alert("Delete request for: " + idsToDelete.join(', '));
+                    }
+                });
+            }
         });
     </script>
 </body>
