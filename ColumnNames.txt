@@ -1,0 +1,15 @@
+
+HostName | Names | StaffID | Serial No | Location | OS |
+
+ Name of Software | Description | Functionality | IP ADDRESS
+
+Physical/Virtual Machine | serial number | IP ADDRESS| OS | RESOURCES | LOCATION | SPECIFICATION-model \ | CLASSIFICATION/SENSITIVITY | BACKUP LOCATION
+
+Device| Resource| Model SERIAL| IP ADDRESS |Specification | LOCATION
+
+Name of Storage | Total size| % Utilization |Available Space| IP adress | Location
+
+OS | Version
+
+Connectivity | ISP | BANDWITH | LOCATION
+PRINTER NAME | DPARTMENT | LOCATION
