@@ -9,17 +9,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* SECTION TITLES: Styled as modern labels with a line divider */
         .section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #2563eb; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
         
-        /* Input Styling */
+        /* INPUT STYLING: Standardized rounded inputs */
         .form-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #64748b; margin-bottom: 0.5rem; }
         .form-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.9375rem; transition: all 0.2s; outline: none; }
         .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
         
-        /* Mode-based Styling for Detail Mode */
-        .mode-detail .form-input { border-color: transparent !important; background: transparent !important; padding-left: 0 !important; color: #1e293b !important; pointer-events: none; font-weight: 600; }
-        .mode-detail .required-star, .mode-detail .hint { display: none; }
+        /* DETAIL MODE CSS: When body has .mode-detail, inputs transform into read-only labels */
+        .mode-detail .form-input { border-color: transparent !important; background: transparent !important; padding-left: 0 !important; color: #1e293b !important; pointer-events: none; font-weight: 600; appearance: none; }
+        .mode-detail .required-star, .mode-detail .hint, .mode-detail .select-arrow { display: none; }
         .mode-detail .section-title::after { background: #cbd5e1; }
     </style>
 </head>
@@ -29,7 +31,9 @@
         <aside class="w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col fixed h-full">
             <div class="p-8"><span class="font-bold text-xl text-blue-600">Asset Inventory</span></div>
             <nav class="flex-1 px-4 space-y-1">
-                <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg transition-all"><i class="fas fa-list"></i> Assets List</a>
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                    <i class="fas fa-list"></i> Assets List
+                </a>
             </nav>
         </aside>
 
@@ -43,10 +47,10 @@
                 </div>
 
                 <div id="actionBar" class="hidden flex items-center gap-3">
-                    <button onclick="setMode('edit')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-100 transition-all">
+                    <button onclick="setMode('edit')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md transition-all">
                         <i class="fas fa-edit mr-2"></i>Edit
                     </button>
-                    <button onclick="confirmDelete()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition-all" title="Delete Asset">
+                    <button onclick="confirmDelete()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition-all">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
@@ -67,23 +71,26 @@
                                 <select id="category" required class="form-input" onchange="toggleCapacityFields(this.value)">
                                     <option value="">Select Category</option>
                                     <option value="Workstation">Workstation</option>
+                                    <option value="Applications">Applications</option>
                                     <option value="Server">Server</option>
+                                    <option value="Network">Network Device</option>
                                     <option value="Storage">Storage</option>
+                                    <option value="Software">Software</option>
                                     <option value="Connectivity">Internet Connectivity</option>
+                                    <option value="Printer">Printer</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label>Serial Number <span class="text-red-500 required-star">*</span></label>
-                                <input type="text" class="form-input" placeholder="SN-XXXX-XXXX">
-                                <span class="text-[10px] text-slate-400 italic hint">System will verify uniqueness</span>
+                                <input type="text" id="serialNo" required class="form-input" placeholder="SN-XXXX-XXXX">
                             </div>
                             <div class="form-group">
                                 <label>Brand</label>
-                                <input type="text" class="form-input" placeholder="e.g. Dell">
+                                <input type="text" id="brand" class="form-input" placeholder="e.g. Dell">
                             </div>
                             <div class="form-group">
                                 <label>Model</label>
-                                <input type="text" class="form-input" placeholder="e.g. Latitude">
+                                <input type="text" id="model" class="form-input" placeholder="e.g. Latitude">
                             </div>
                         </div>
                     </section>
@@ -91,37 +98,27 @@
                     <section>
                         <div class="section-title">02 Assignment</div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div class="form-group">
-                                <label>Staff Name</label>
-                                <input type="text" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Staff ID</label>
-                                <input type="text" class="form-input">
-                            </div>
+                            <div class="form-group"><label>Staff Name</label><input type="text" id="staffName" class="form-input"></div>
+                            <div class="form-group"><label>Staff ID</label><input type="text" id="staffId" class="form-input"></div>
                             <div class="form-group">
                                 <label>Department</label>
-                                <select class="form-input">
-                                    <option>IT</option>
-                                    <option>HR</option>
-                                    <option>Finance</option>
-                                    <option>Operations</option>
-                                    <option>Facilities</option>
+                                <select id="department" class="form-input">
+                                    <option value="IT">IT</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Operations">Operations</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Location</label>
-                                <input type="text" class="form-input">
-                            </div>
+                            <div class="form-group"><label>Location</label><input type="text" id="location" class="form-input"></div>
                         </div>
                     </section>
 
                     <section>
                         <div class="section-title">03 Technical Specs</div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="form-group"><label>IP Address</label><input type="text" class="form-input" placeholder="0.0.0.0"></div>
-                            <div class="form-group"><label>OS</label><input type="text" class="form-input" placeholder="e.g. Windows 11"></div>
-                            <div class="form-group"><label>OS Version</label><input type="text" class="form-input" placeholder="e.g. 23H2"></div>
+                            <div class="form-group"><label>IP Address</label><input type="text" id="ipAddress" class="form-input" placeholder="0.0.0.0"></div>
+                            <div class="form-group"><label>OS</label><input type="text" id="os" class="form-input" placeholder="e.g. Windows 11"></div>
+                            <div class="form-group"><label>OS Version</label><input type="text" id="osVersion" class="form-input" placeholder="e.g. 23H2"></div>
                         </div>
                     </section>
 
@@ -130,20 +127,27 @@
                         <div id="memoryGroup" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="form-group">
                                 <label>Memory Size</label>
-                                <div class="flex gap-2">
-                                    <input type="text" class="form-input flex-1">
-                                    <select class="form-input w-24"><option>GB</option><option>TB</option></select>
+                                <div class="flex items-center">
+                                    <input type="text" id="memSize" class="form-input !rounded-r-none border-r-0" placeholder="0">
+                                    <select id="memUnit" class="form-input !w-24 !rounded-l-none bg-slate-50 border-l-0 select-arrow">
+                                        <option value="GB">GB</option>
+                                        <option value="TB">TB</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="form-group"><label>Memory Used</label><input type="text" class="form-input"></div>
-                            <div class="form-group"><label>Memory Available</label><input type="text" class="form-input"></div>
+                            <div class="form-group"><label>Memory Used</label><input type="text" id="memUsed" class="form-input"></div>
+                            <div class="form-group"><label>Memory Available</label><input type="text" id="memAvail" class="form-input"></div>
                         </div>
+
                         <div id="bandwidthGroup" class="hidden">
                             <div class="form-group max-w-xs">
                                 <label>Bandwidth</label>
-                                <div class="flex gap-2">
-                                    <input type="text" class="form-input flex-1">
-                                    <select class="form-input w-28"><option>Mbps</option><option>Gbps</option></select>
+                                <div class="flex items-center">
+                                    <input type="text" id="bandwidth" class="form-input !rounded-r-none border-r-0" placeholder="0">
+                                    <select id="bandUnit" class="form-input !w-28 !rounded-l-none bg-slate-50 border-l-0 select-arrow">
+                                        <option value="Mbps">Mbps</option>
+                                        <option value="Gbps">Gbps</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -152,18 +156,15 @@
                     <section>
                         <div class="section-title">05 Description & Security</div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="form-group"><label>Description</label><textarea rows="4" class="form-input"></textarea></div>
-                            <div class="form-group"><label>Functionality</label><textarea rows="3" class="form-input"></textarea></div>
+                            <div class="form-group"><label>Description</label><textarea id="description" rows="4" class="form-input"></textarea></div>
+                            <div class="form-group"><label>Functionality</label><textarea id="functionality" rows="3" class="form-input"></textarea></div>
                             <div class="form-group">
                                 <label>Sensitivity</label>
-                                <select class="form-input">
-                                    <option>Public</option>
-                                    <option>Internal</option>
-                                    <option>Confidential</option>
-                                    <option>Restricted</option>
+                                <select id="sensitivity" class="form-input">
+                                    <option>Public</option><option>Internal</option><option>Confidential</option><option>Restricted</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Backup Location</label><input type="text" class="form-input"></div>
+                            <div class="form-group"><label>Backup Location</label><input type="text" id="backupLoc" class="form-input"></div>
                         </div>
                     </section>
 
@@ -172,86 +173,108 @@
                         <div class="space-y-6">
                             <div class="form-group">
                                 <label>Attachments</label>
-                                <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group">
-                                    <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                                        <i class="fas fa-cloud-upload-alt text-blue-600 text-xl"></i>
-                                    </div>
-                                    <p class="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
-                                    <p class="text-xs text-slate-400 mt-1">Supports PDF, JPG (Max 10MB)</p>
-                                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.jpeg">
-                                </div>
-                                <div id="filePreviewList" class="hidden mt-4 space-y-2">
-                                    <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg">
-                                        <div class="flex items-center gap-3">
-                                            <i class="far fa-file-pdf text-red-500"></i>
-                                            <span class="text-sm font-medium text-slate-600">Purchase_Invoice.pdf</span>
-                                        </div>
-                                        <button class="text-slate-400 hover:text-blue-600"><i class="fas fa-download"></i></button>
-                                    </div>
+                                <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-blue-600 text-2xl mb-4"></i>
+                                    <p class="text-sm font-semibold text-slate-700">Drag and drop files here</p>
+                                    <input type="file" id="fileInput" class="hidden">
                                 </div>
                             </div>
 
                             <div id="formControls" class="pt-6 space-y-3">
-                                <button type="submit" id="primaryBtn" class="w-full bg-[#2563EB] text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.99] transition-all tracking-wide">
+                                <button type="submit" id="primaryBtn" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">
                                     Create Asset
                                 </button>
-                                <button type="button" onclick="cancelMode()" class="w-full bg-transparent text-slate-400 py-3 rounded-xl font-semibold hover:text-slate-600 transition-colors">
+                                <button type="button" onclick="cancelMode()" class="w-full text-slate-400 py-3 font-semibold hover:text-slate-600 transition-colors">
                                     Cancel
                                 </button>
                             </div>
                         </div>
                     </section>
-
                 </form>
             </div>
         </main>
     </div>
 
     <script>
-        // 1. Get Asset ID from URL (e.g., ?id=10)
         const urlParams = new URLSearchParams(window.location.search);
         const assetId = urlParams.get('id');
         const token = localStorage.getItem('token');
+        let currentMode = 'create';
 
         window.onload = async () => {
             if (assetId) {
-                // If an ID exists, we are in DETAIL mode
+                // Show a "Loading..." state in the title if you like
+                document.getElementById('navTitle').innerText = "Loading Asset...";
                 await loadAssetDetail(assetId);
             } else {
-                // Otherwise, stay in CREATE mode
                 setMode('create');
             }
         };
 
-        //*** Fetching & Populating Data - This function calls the API and maps the data to your form fields.//
         async function loadAssetDetail(id) {
             try {
-                const response = await fetch(`http://172.28.192.16/asset/api/get_asset?id=${id}`, {
+                // UPDATE: Fetching from the LIST API because it contains the "Deep" data
+                const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    const data = result.data;
+                    // UPDATE: Finding the specific object in the array provided by your friend
+                    const data = result.data.find(a => a.id === id);
+                    if (!data) return alert("Asset not found");
 
-                    // Populate Section 1: Identification
+                    // Mapping API Keys to HTML IDs
                     document.getElementById('assetName').value = data.Name || '';
                     document.getElementById('category').value = data.Category || '';
-                    // ... map other fields here ...
+                    document.getElementById('serialNo').value = data.SerialNo || '';
+                    document.getElementById('brand').value = data.Brand || '';
+                    document.getElementById('model').value = data.Model || '';
+                    document.getElementById('staffName').value = data.StaffName || '';
+                    document.getElementById('staffId').value = data.StaffID || '';
+                    document.getElementById('department').value = data.Department || '';
+                    document.getElementById('location').value = data.Location || '';
+                    document.getElementById('ipAddress').value = data.IP_Address || '';
+                    document.getElementById('os').value = data.OS || '';
+                    document.getElementById('osVersion').value = data.OS_Version || '';
+                    document.getElementById('description').value = data.Description || '';
+                    document.getElementById('functionality').value = data.Functionality || '';
+                    document.getElementById('sensitivity').value = data.Sensitivity || '';
+                    document.getElementById('backupLoc').value = data.Backup_Location || '';
+                    
+                    // Capacity Data
+                    document.getElementById('memSize').value = data.Memory_Size || '';
+                    document.getElementById('memUsed').value = data.Memory_Used || '';
+                    document.getElementById('memAvail').value = data.Memory_Available || '';
+                    document.getElementById('bandwidth').value = data.Bandwidth || '';
 
-                    // Trigger the conditional capacity fields
                     toggleCapacityFields(data.Category);
-
-                    // Once data is loaded, lock the page to 'detail' mode
                     setMode('detail', data.Name);
-                } else {
-                    alert("Error loading asset: " + result.message);
                 }
-            } catch (err) {
-                console.error("Fetch error:", err);
-            }
+
+                // --- Inside loadAssetDetail function ---
+                // Handle Memory Size (Splitting "16GB" into "16" and "GB")
+                if (data.Memory_Size) {
+                    const memVal = parseInt(data.Memory_Size); // Gets the number
+                    const memUnit = data.Memory_Size.replace(/[0-9]/g, ''); // Gets the text part
+                    
+                    document.getElementById('memSize').value = memVal || data.Memory_Size;
+                    if (memUnit) document.getElementById('memUnit').value = memUnit;
+                }
+
+                // Handle Bandwidth (Splitting "1Gbps" into "1" and "Gbps")
+                if (data.Bandwidth) {
+                    const bandVal = parseInt(data.Bandwidth);
+                    const bandUnit = data.Bandwidth.replace(/[0-9]/g, '');
+                    
+                    document.getElementById('bandwidth').value = bandVal || data.Bandwidth;
+                    if (bandUnit) document.getElementById('bandUnit').value = bandUnit;
+                }
+
+            } catch (err) { console.error("Error:", err); }
         }
 
+        // UPDATE: Expanded category list for conditional fields
         function toggleCapacityFields(category) {
             const section = document.getElementById('capacitySection');
             const memGroup = document.getElementById('memoryGroup');
@@ -270,120 +293,38 @@
             }
         }
 
+        // UPDATE: Centralized UI state management
         function setMode(mode, assetName = "") {
+            currentMode = mode;
             const body = document.getElementById('pageBody');
-            const navTitle = document.getElementById('navTitle');
             const actionBar = document.getElementById('actionBar');
             const formControls = document.getElementById('formControls');
-            const breadcrumb = document.getElementById('breadcrumbCurrent');
-            const primaryBtn = document.getElementById('primaryBtn');
-            const uploadZone = document.getElementById('dropZone');
+            
+            body.className = `mode-${mode} lg:ml-0 flex flex-col`;
 
-            currentMode = mode;
-            body.className = `mode-${mode} lg:ml-0 flex flex-col`; // Toggle CSS modes
-
-            if (mode === 'create') {
-                navTitle.innerText = "Create New Asset";
-                breadcrumb.innerText = "New Asset";
-                primaryBtn.innerText = "Create Asset";
+            if (mode === 'detail') {
+                document.getElementById('navTitle').innerText = `Asset: ${assetName}`;
+                actionBar.classList.remove('hidden');
+                formControls.classList.add('hidden');
+            } else {
+                document.getElementById('navTitle').innerText = mode === 'create' ? "Create New Asset" : "Edit Asset";
                 actionBar.classList.add('hidden');
                 formControls.classList.remove('hidden');
-                uploadZone.classList.remove('hidden');
-            } 
-            else if (mode === 'detail') {
-                navTitle.innerText = `Asset: ${assetName || "View Asset"}`;
-                breadcrumb.innerText = assetName || "Detail";
-                actionBar.classList.remove('hidden'); // Show Edit/Delete
-                formControls.classList.add('hidden'); // Hide Save/Cancel
-                uploadZone.classList.add('hidden');   // Hide Upload in detail view
-            } 
-            else if (mode === 'edit') {
-                navTitle.innerText = `Edit: ${assetName || "Asset"}`;
-                breadcrumb.innerText = "Edit Mode";
-                primaryBtn.innerText = "Save Changes";
-                actionBar.classList.add('hidden');    // Hide Edit/Delete while editing
-                formControls.classList.remove('hidden');
-                uploadZone.classList.remove('hidden');
+                document.getElementById('primaryBtn').innerText = mode === 'create' ? "Create Asset" : "Save Changes";
             }
         }
 
         function cancelMode() { window.location.href = 'index.html'; }
-        function confirmDelete() { if(confirm("Confirm deletion?")) window.location.href = 'index.html'; }
-        
-        //***** Handle Drag & Drop Interaction ****
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
 
-        dropZone.addEventListener('click', () => fileInput.click());
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-blue-500', 'bg-blue-50');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        function handleFiles(files) {
-            if (files.length > 0) {
-                const file = files[0];
-                if (file.size > 10 * 1024 * 1024) {
-                    alert("File is too large! Max size is 10MB.");
-                    return;
-                }
-                // Update UI to show file name (optional)
-                console.log("File selected:", file.name);
+        function confirmDelete() {
+            if(confirm("Permanently delete this asset?")) {
+                // Uses the Delete API your friend documented
+                fetch(`http://172.28.192.16/asset/api/delete_asset?id=${assetId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(() => window.location.href = 'index.html');
             }
         }
-
-        
-        document.getElementById('assetForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                // Collect all your fields here
-                name: document.getElementById('assetName').value,
-                category: document.getElementById('category').value,
-                // ...
-            };
-
-            const endpoint = assetId 
-                ? `http://172.28.192.16/asset/api/update?id=${assetId}` 
-                : `http://172.28.192.16/asset/api/create`;
-
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    alert(assetId ? "Changes Saved!" : "Asset Created!");
-                    isUnsaved = false; // Reset warning
-                    window.location.href = 'index.html'; // Go back to the long table
-                }
-            } catch (err) {
-                alert("Action failed. Check console.");
-            }
-        });
-        // Test the "Detail" mode immediately
-        // window.onload = () => setMode('detail', 'Dell Latitude 5540');
     </script>
 </body>
 </html>

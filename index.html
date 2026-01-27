@@ -169,11 +169,18 @@
                     totalAssetCount = result.count || result.data.length;
                     visibleAssetCount = result.data.length;
 
+                    // Inside index.html -> loadAssets() function
                     result.data.forEach(asset => {
                         const row = `
                             <tr class="hover:bg-blue-50/40">
                                 <td class="p-5 text-center"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600"></td>
-                                <td class="p-5 font-semibold text-slate-700">${asset.Name || 'N/A'}</td>
+                                
+                                <td class="p-5 font-semibold text-slate-700">
+                                    <a href="assetdetail.html?id=${asset.id}" class="text-blue-600 hover:underline decoration-2 underline-offset-4">
+                                        ${asset.Name || 'N/A'}
+                                    </a>
+                                </td>
+
                                 <td class="p-5 text-slate-500">${asset.Category || 'N/A'}</td>
                                 <td class="p-5 font-mono text-xs font-bold text-blue-600">${asset.SerialNo || 'N/A'}</td>
                                 <td class="p-5 text-slate-500">${asset.Location || 'N/A'}</td>
@@ -182,10 +189,11 @@
                                     <span class="text-xs font-bold text-slate-400 block uppercase">Recently Added</span>
                                     <span class="text-[10px] text-blue-400">#${asset.id}</span>
                                 </td>
+                                
                                 <td class="p-5 text-center">
-                                    <button onclick="editAsset('${asset.id}')" class="text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
+                                    <a href="assetdetail.html?id=${asset.id}" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
                                         <i class="fas fa-edit"></i>
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>`;
                         tableBody.insertAdjacentHTML('beforeend', row);
