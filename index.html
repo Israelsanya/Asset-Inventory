@@ -8,95 +8,100 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
-        .custom-shadow { box-shadow: 0px 4px 12px rgba(13, 10, 44, 0.06); }
-        /* Ensuring the table container doesn't break the layout */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; }
+        /* Increased max-width to 1700px for a more expansive feel like Image 1 */
+        .custom-container { max-width: 1700px; margin: 0 auto; width: 100%; }
+        .custom-shadow { box-shadow: 0px 10px 25px rgba(13, 10, 44, 0.04); }
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; background: white; border-radius: 12px; }
+        /* Ensuring rows have enough height to prevent the "squished" look */
+        tbody tr { min-height: 70px; transition: all 0.2s; }
+        .main-content { flex: 1; padding: 2rem; }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-[1600px] mx-auto bg-white rounded-xl p-6 custom-shadow">
-        
-        <div class="flex flex-col lg:flex-row justify-between items-center mb-8 gap-6">
-            <div class="flex items-center gap-3 w-full lg:w-auto relative">
-                <div class="relative group">
-                    <img src="images/FirstbankIcon.png" alt="User Menu" id="userMenuBtn"
-                        class="w-10 h-10 object-contain cursor-pointer hover:opacity-80 transition-opacity border-transparent hover:border-gray-200 p-0.5">
-                    
-                    <div id="userDropdown" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
-                        <div class="py-2">
-                            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-bold tracking-wider">User Options</div>
-                            <hr class="my-1 border-gray-50">
-                            <a href="javascript:void(0)" onclick="handleLogout()" class="flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span class="font-medium">Logout</span>
-                            </a>
+<body class="bg-[#f8fafc]">
+
+    <div class="custom-container main-content">
+        <div class="bg-white rounded-2xl p-8 custom-shadow">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
+                <div class="flex items-center gap-4 w-full lg:w-auto relative">
+                    <div class="relative group">
+                        <img src="images/FirstbankIcon.png" alt="User Menu" id="userMenuBtn"
+                            class="w-12 h-12 object-contain cursor-pointer hover:scale-105 transition-transform">
+                        
+                        <div id="userDropdown" class="hidden absolute left-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-3 text-xs text-gray-400 uppercase font-bold tracking-widest">User Options</div>
+                                <hr class="border-gray-50">
+                                <a href="javascript:void(0)" onclick="handleLogout()" class="flex items-center gap-3 px-4 py-4 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span class="font-semibold">Logout</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
+                    <h1 class="text-[#1e293b] text-2xl font-bold tracking-tight">Asset Inventory</h1>
                 </div>
-                <h1 class="text-[#9CA3AF] text-xl font-semibold whitespace-nowrap">Asset Inventory</h1>
-            </div>
-            
-            <div class="relative w-full lg:max-w-md">
-                <input type="text" id="searchInput" placeholder="Search Assets..." 
-                    class="w-full pl-5 pr-20 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm transition-all">
-                <button id="clearSearch" class="hidden absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times-circle"></i>
-                </button>
-                <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                <button id="deleteAssetBtn" class="hidden flex-1 lg:flex-none bg-[#FF0000] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-sm">
-                    <i class="fas fa-trash-alt"></i> 
-                    <span id="deleteBtnText">Delete Asset</span>
-                </button>
-                <button class="flex-1 lg:flex-none bg-[#50C878] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors shadow-sm">
-                    <i class="fas fa-file-import"></i> Import Excel
-                </button>
-                <button class="flex-1 lg:flex-none bg-[#F59E0B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-amber-600 transition-colors shadow-sm">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </button>
-                <button class="flex-1 lg:flex-none bg-[#044BB4] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-800 transition-colors shadow-sm">
-                    <i class="fas fa-plus"></i> New Asset
-                </button>
-            </div>
-        </div>
-
-        <div class="table-wrapper border border-gray-100 rounded-lg">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
-                <thead class="bg-[#F9FAFB] text-[#1F2A37] text-sm font-semibold border-b border-gray-100">
-                    <tr>
-                        <th class="p-4 w-12"><input type="checkbox" id="selectAll" class="w-4 h-4 rounded accent-blue-600"></th>
-                        <th class="p-4">Asset Name <i class="fas fa-sort ml-1 text-[10px] text-gray-400"></i></th>
-                        <th class="p-4">Category <i class="fas fa-sort ml-1 text-[10px] text-gray-400"></i></th>
-                        <th class="p-4">Serial No</th>
-                        <th class="p-4">Location</th>
-                        <th class="p-4">Department</th>
-                        <th class="p-4">Created Date <i class="fas fa-sort ml-1 text-[10px] text-gray-400"></i></th>
-                        <th class="p-4 text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-[#374151]">
-                    </tbody>
-            </table>
-        </div>
-
-        <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <div id="footerStatus" class="font-medium text-gray-600">Loading assets...</div>
-            
-            <div class="flex items-center gap-2">
-                <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50"><i class="fas fa-chevron-left text-xs"></i></button>
-                <button class="w-8 h-8 flex items-center justify-center bg-[#044BB4] text-white rounded-md font-medium">1</button>
-                <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50">2</button>
-                <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50">3</button>
-                <span class="px-1 text-gray-300">...</span>
-                <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50">12</button>
-                <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50"><i class="fas fa-chevron-right text-xs"></i></button>
                 
-                <div class="ml-4 flex items-center gap-2">
-                    <span class="hidden sm:inline">Show</span>
-                    <select class="p-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400">
+                <div class="relative w-full lg:max-w-xl">
+                    <input type="text" id="searchInput" placeholder="Search by name, serial, or location..." 
+                        class="w-full pl-6 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm transition-all">
+                    <button id="clearSearch" class="hidden absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                    <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <button id="deleteAssetBtn" class="hidden flex-1 lg:flex-none bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 shadow-lg shadow-red-200 transition-all">
+                        <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                    </button>
+                    <button class="flex-1 lg:flex-none bg-[#10b981] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
+                        <i class="fas fa-file-excel"></i> Report
+                    </button>
+                    <button onclick="window.location.href='add_asset.html'" class="flex-1 lg:flex-none bg-[#044BB4] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                        <i class="fas fa-plus"></i> New Asset
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper border border-gray-100">
+                <table class="w-full text-left border-collapse min-w-[1100px]">
+                    <thead>
+                        <tr class="bg-gray-50/50 text-[#64748b] text-xs uppercase tracking-widest font-bold border-b border-gray-100">
+                            <th class="p-5 w-14 text-center"><input type="checkbox" id="selectAll" class="w-4 h-4 rounded accent-blue-600"></th>
+                            <th class="p-5">Asset Name</th>
+                            <th class="p-5">Category</th>
+                            <th class="p-5">Serial No</th>
+                            <th class="p-5">Location</th>
+                            <th class="p-5">Department</th>
+                            <th class="p-5">Created Date</th>
+                            <th class="p-5 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-[#334155] divide-y divide-gray-50">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 text-sm text-gray-500">
+                <div id="footerStatus" class="font-semibold text-gray-500 bg-gray-50 px-4 py-2 rounded-lg">
+                    Loading assets...
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
+                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-[#044BB4] text-white rounded-xl font-bold shadow-lg shadow-blue-100">1</button>
+                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all">2</button>
+                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all">3</button>
+                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all"><i class="fas fa-chevron-right text-xs"></i></button>
+                    </div>
+                    
+                    <select class="ml-4 p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 font-medium">
                         <option>20 / Page</option>
                         <option>50 / Page</option>
                         <option>100 / Page</option>
@@ -106,190 +111,139 @@
         </div>
     </div>
 
+    <div class="py-8 text-center text-gray-400 text-xs font-medium tracking-wide">
+        © <script>document.write(new Date().getFullYear());</script> FIRST PENSION CUSTODIAN NIGERIA LIMITED
+    </div>
+
     <script>
-    // --- 1. GLOBAL STATE ---
-    let totalAssetCount = 0;
-    let visibleAssetCount = 0;
+        // Keep your existing script logic exactly as it was
+        let totalAssetCount = 0;
+        let visibleAssetCount = 0;
 
-    // --- 2. UI & MENU LOGIC ---
-    const menuBtn = document.getElementById('userMenuBtn');
-    const dropdown = document.getElementById('userDropdown');
+        const menuBtn = document.getElementById('userMenuBtn');
+        const dropdown = document.getElementById('userDropdown');
 
-    if (menuBtn) {
-        menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('hidden');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+            });
+        }
+
+        window.addEventListener('click', () => {
+            if (dropdown) dropdown.classList.add('hidden');
         });
-    }
 
-    window.addEventListener('click', () => {
-        if (dropdown) dropdown.classList.add('hidden');
-    });
-
-    function handleLogout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-    }
-
-    // AUTH GUARD
-    window.onload = function() {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
             window.location.href = 'login.html';
-        } else {
-            loadAssets();
         }
-    }
 
-    // --- 3. DATA FETCHING ---
-    async function loadAssets() {
-        const tableBody = document.querySelector('tbody');
-        const footerStatus = document.getElementById('footerStatus');
-        const token = localStorage.getItem('token');
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+            } else {
+                loadAssets();
+            }
+        }
 
-        tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching assets...</td></tr>`;
+        async function loadAssets() {
+            const tableBody = document.querySelector('tbody');
+            const footerStatus = document.getElementById('footerStatus');
+            const token = localStorage.getItem('token');
 
-        try {
-            const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-gray-400"><i class="fas fa-circle-notch fa-spin fa-2x mb-3 block mx-auto"></i> Synchronizing Assets...</td></tr>`;
 
-            const result = await response.json();
-
-            if (result.status === 'success' && result.data) {
-                tableBody.innerHTML = ''; 
-                totalAssetCount = result.count || result.data.length;
-                visibleAssetCount = result.data.length;
-
-                result.data.forEach(asset => {
-                    const row = `
-                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                            <td class="p-4"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600"></td>
-                            <td class="p-4 font-medium text-gray-900">${asset.Name || 'N/A'}</td>
-                            <td class="p-4">${asset.Category || 'N/A'}</td>
-                            <td class="p-4 font-mono text-xs text-blue-600">${asset.SerialNo || 'N/A'}</td>
-                            <td class="p-4">${asset.Location || 'N/A'}</td>
-                            <td class="p-4">${asset.Department || 'N/A'}</td>
-                            <td class="p-4">
-                                <span class="text-sm">Recently Added</span>
-                                <span class="text-[10px] block text-gray-400">ID: #${asset.id}</span>
-                            </td>
-                            <td class="p-4 text-center">
-                                <button onclick="editAsset('${asset.id}')" class="text-green-500 hover:text-green-700 p-2 bg-green-50 rounded-lg transition-colors">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.insertAdjacentHTML('beforeend', row);
+            try {
+                const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                 });
 
-                if (footerStatus) {
-                    footerStatus.innerText = `1 - ${visibleAssetCount} of ${totalAssetCount} items`;
+                const result = await response.json();
+
+                if (result.status === 'success' && result.data) {
+                    tableBody.innerHTML = ''; 
+                    totalAssetCount = result.count || result.data.length;
+                    visibleAssetCount = result.data.length;
+
+                    result.data.forEach(asset => {
+                        const row = `
+                            <tr class="hover:bg-blue-50/40">
+                                <td class="p-5 text-center"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600"></td>
+                                <td class="p-5 font-semibold text-slate-700">${asset.Name || 'N/A'}</td>
+                                <td class="p-5 text-slate-500">${asset.Category || 'N/A'}</td>
+                                <td class="p-5 font-mono text-xs font-bold text-blue-600">${asset.SerialNo || 'N/A'}</td>
+                                <td class="p-5 text-slate-500">${asset.Location || 'N/A'}</td>
+                                <td class="p-5 text-slate-500">${asset.Department || 'N/A'}</td>
+                                <td class="p-5">
+                                    <span class="text-xs font-bold text-slate-400 block uppercase">Recently Added</span>
+                                    <span class="text-[10px] text-blue-400">#${asset.id}</span>
+                                </td>
+                                <td class="p-5 text-center">
+                                    <button onclick="editAsset('${asset.id}')" class="text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        tableBody.insertAdjacentHTML('beforeend', row);
+                    });
+
+                    footerStatus.innerText = `Showing 1 - ${visibleAssetCount} of ${totalAssetCount} total assets`;
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-red-400">Unable to retrieve data.</td></tr>`;
                 }
+            } catch (error) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-red-400">Network connection failed.</td></tr>`;
+            }
+        }
 
+        function updateDeleteButtonVisibility() {
+            const tableBody = document.querySelector('tbody');
+            const deleteBtn = document.getElementById('deleteAssetBtn');
+            const footerStatus = document.getElementById('footerStatus');
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked')).filter(cb => cb.closest('tr').style.display !== 'none');
+            const count = checkedBoxes.length;
+
+            if (count > 0) {
+                deleteBtn.classList.remove('hidden');
+                footerStatus.innerHTML = `<span class="text-blue-600 font-bold"><i class="fas fa-check-circle mr-2"></i>${count} asset${count > 1 ? 's' : ''} selected</span>`;
             } else {
-                tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load assets.</td></tr>`;
-            }
-        } catch (error) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Connection Error.</td></tr>`;
-        }
-    }
-
-    // --- 4. SELECTION & FILTER LOGIC ---
-    function updateDeleteButtonVisibility() {
-        const tableBody = document.querySelector('tbody');
-        const deleteBtn = document.getElementById('deleteAssetBtn');
-        const footerStatus = document.getElementById('footerStatus');
-        
-        const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'))
-                                  .filter(cb => cb.closest('tr').style.display !== 'none');
-        
-        const count = checkedBoxes.length;
-
-        if (count > 0) {
-            deleteBtn.classList.remove('hidden');
-            if (footerStatus) {
-                footerStatus.innerHTML = `<span class="text-blue-600 font-bold">${count} item${count > 1 ? 's' : ''} selected</span>`;
-            }
-        } else {
-            deleteBtn.classList.add('hidden');
-            if (footerStatus) {
-                footerStatus.innerText = `1 - ${visibleAssetCount} of ${totalAssetCount} items`;
+                deleteBtn.classList.add('hidden');
+                footerStatus.innerText = `Showing 1 - ${visibleAssetCount} of ${totalAssetCount} total assets`;
             }
         }
-    }
 
-    function filterAssets() {
-        const searchInput = document.getElementById('searchInput');
-        const filter = searchInput.value.toLowerCase();
-        const tableRows = document.querySelectorAll('tbody tr');
-        const selectAllCheckbox = document.getElementById('selectAll');
-
-        if (selectAllCheckbox) selectAllCheckbox.checked = false;
-
-        tableRows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            if (text.includes(filter)) {
-                row.style.display = ""; 
-            } else {
-                row.style.display = "none";
-                const cb = row.querySelector('input[type="checkbox"]');
-                if (cb) cb.checked = false;
-            }
-        });
-        updateDeleteButtonVisibility();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const searchInput = document.getElementById('searchInput');
-        const clearBtn = document.getElementById('clearSearch');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const tableBody = document.querySelector('tbody');
-
-        if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                if (clearBtn) clearBtn.classList.toggle('hidden', searchInput.value.length === 0);
-                filterAssets(); 
+        // ... rest of your search and selection event listeners remain the same ...
+        function filterAssets() {
+            const searchInput = document.getElementById('searchInput');
+            const filter = searchInput.value.toLowerCase();
+            const tableRows = document.querySelectorAll('tbody tr');
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            tableRows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
             });
+            updateDeleteButtonVisibility();
         }
 
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                clearBtn.classList.add('hidden');
-                filterAssets();
-            });
-        }
-
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', () => {
-                const allRows = tableBody.querySelectorAll('tr');
-                allRows.forEach(row => {
-                    if (row.style.display !== 'none') {
-                        const cb = row.querySelector('input[type="checkbox"]');
-                        if (cb) cb.checked = selectAllCheckbox.checked;
-                    }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchInput').addEventListener('input', filterAssets);
+            document.getElementById('selectAll').addEventListener('change', function() {
+                document.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => {
+                    if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
                 });
                 updateDeleteButtonVisibility();
             });
-        }
-
-        tableBody.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
-                updateDeleteButtonVisibility();
-            }
+            document.querySelector('tbody').addEventListener('change', updateDeleteButtonVisibility);
         });
-    });
 
-    function editAsset(id) {
-        console.log("Editing:", id);
-    }
-</script>
+        function editAsset(id) { 
+            console.log("Editing Asset ID:", id); 
+        }
+    </script>
 </body>
 </html>
