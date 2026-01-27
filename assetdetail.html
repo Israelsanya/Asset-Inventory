@@ -3,256 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Asset - Asset Inventory Portal</title>
+    <title>Asset Detail | Inventory Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #2563eb; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
+        
+        /* Input Styling */
+        .form-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #64748b; margin-bottom: 0.5rem; }
+        .form-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.9375rem; transition: all 0.2s; outline: none; }
+        .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
+        
+        /* Mode-based Styling for Detail Mode */
+        .mode-detail .form-input { border-color: transparent !important; background: transparent !important; padding-left: 0 !important; color: #1e293b !important; pointer-events: none; font-weight: 600; }
+        .mode-detail .required-star, .mode-detail .hint { display: none; }
+        .mode-detail .section-title::after { background: #cbd5e1; }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="flex">
-        <!-- <aside class="w-1/4 bg-white shadow-md p-4">
-            <h2 class="text-xl font-semibold mb-6">Navigation</h2>
-            <ul>
-                <li><a href="#" class="block py-2 text-gray-700 hover:bg-gray-200">Dashboard</a></li>
-                <li><a href="#" class="block py-2 text-gray-700 hover:bg-gray-200">Assets</a></li>
-                <li><a href="#" class="block py-2 text-gray-700 hover:bg-gray-200">Reports</a></li>
-                <li><a href="#" class="block py-2 text-gray-700 hover:bg-gray-200">Settings</a></li>
-            </ul>
-        </aside> -->
-        <main class="flex-1 p-4">
-            <header class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold">Asset Inventory Portal | Create New Asset</h1>
-                <nav class="text-gray-600">
-                    <ol class="flex space-x-2">
-                        <li><a href="#" class="hover:underline">Home</a></li>
-                        <li>&gt;</li>
-                        <li><a href="#" class="hover:underline">Assets</a></li>
-                        <li>&gt;</li>
-                        <li>Create Asset</li>
-                    </ol>
-                </nav>
+<body class="mode-create" id="pageBody">
+
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col fixed h-full">
+            <div class="p-8"><span class="font-bold text-xl text-blue-600">Asset Inventory</span></div>
+            <nav class="flex-1 px-4 space-y-1">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg transition-all"><i class="fas fa-list"></i> Assets List</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 lg:ml-64 flex flex-col">
+            <header class="bg-white border-b border-gray-200 sticky top-0 z-30 px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h1 id="navTitle" class="text-xl font-bold text-slate-800 tracking-tight">Create New Asset</h1>
+                    <div class="text-xs text-slate-400 mt-1">
+                        Home / Assets / <span id="breadcrumbCurrent" class="text-slate-600 font-medium">New Asset</span>
+                    </div>
+                </div>
+
+                <div id="actionBar" class="hidden flex items-center gap-3">
+                    <button onclick="setMode('edit')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-100 transition-all">
+                        <i class="fas fa-edit mr-2"></i>Edit
+                    </button>
+                    <button onclick="confirmDelete()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition-all" title="Delete Asset">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </header>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <form>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Asset Name <span class="text-red-500">*</span></label>
-                            <input type="text" required class="border rounded-lg w-full p-3" placeholder="Enter asset name">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Category <span class="text-red-500">*</span></label>
-                            <select required class="border rounded-lg w-full p-3" onchange="showFields(this.value)">
-                                <option value="">Select a category</option>
-                                <option value="Workstation">Workstation</option>
-                                <option value="Applications">Applications</option>
-                                <option value="Server">Server</option>
-                                <option value="Network Device">Network Device</option>
-                                <option value="Storage">Storage</option>
-                                <option value="Software">Software</option>
-                                <option value="Internet Connectivity">Internet Connectivity</option>
-                                <option value="Printer">Printer</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Serial Number <span class="text-red-500">*</span></label>
-                            <input type="text" required class="border rounded-lg w-full p-3" placeholder="Enter serial number">
-                            <p class="text-gray-500 text-sm">Must be unique</p>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Location</label>
-                            <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter location">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Status</label>
-                            <select class="border rounded-lg w-full p-3">
-                                <option value="In Use">In Use</option>
-                                <option value="In Store">In Store</option>
-                                <option value="Under Maintenance">Under Maintenance</option>
-                                <option value="Retired/Disposed">Retired/Disposed</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-1">Description/Notes</label>
-                            <textarea class="border rounded-lg w-full p-3" rows="3" placeholder="Enter any additional notes"></textarea>
-                        </div>
 
-                        <!-- Conditional fields based on category selection -->
-                        <div id="workstationFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Staff ID</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter Staff ID">
+            <div class="p-8 max-w-5xl">
+                <form id="assetForm" class="space-y-12">
+                    
+                    <section>
+                        <div class="section-title">01 Identification</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="form-group lg:col-span-2">
+                                <label>Asset Name <span class="text-red-500 required-star">*</span></label>
+                                <input type="text" id="assetName" required class="form-input" placeholder="e.g. Dell Latitude 5540">
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">OS</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter Operating System">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">User Name</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter User Name">
-                            </div>
-                        </div>
-
-                        <div id="applicationsFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">IP Address</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter IP Address">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Functionality</label>
-                                <textarea class="border rounded-lg w-full p-3" rows="3" placeholder="Enter functionality"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Description</label>
-                                <textarea class="border rounded-lg w-full p-3" rows="3" placeholder="Enter description"></textarea>
-                            </div>
-                        </div>
-
-                        <div id="serverFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">IP Address</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter IP Address">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">OS</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter Operating System">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Resources (CPU/RAM/Disk)</label>
-                                <textarea class="border rounded-lg w-full p-3" rows="3" placeholder="Enter resources"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Model/Specification</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter model/specification">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Sensitivity Classification</label>
-                                <select class="border rounded-lg w-full p-3">
-                                    <option value="Public">Public</option>
-                                    <option value="Internal">Internal</option>
-                                    <option value="Confidential">Confidential</option>
-                                    <option value="Restricted">Restricted</option>
+                            <div class="form-group">
+                                <label>Category <span class="text-red-500 required-star">*</span></label>
+                                <select id="category" required class="form-input" onchange="toggleCapacityFields(this.value)">
+                                    <option value="">Select Category</option>
+                                    <option value="Workstation">Workstation</option>
+                                    <option value="Server">Server</option>
+                                    <option value="Storage">Storage</option>
+                                    <option value="Connectivity">Internet Connectivity</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Backup Location</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter backup location">
+                            <div class="form-group">
+                                <label>Serial Number <span class="text-red-500 required-star">*</span></label>
+                                <input type="text" class="form-input" placeholder="SN-XXXX-XXXX">
+                                <span class="text-[10px] text-slate-400 italic hint">System will verify uniqueness</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Brand</label>
+                                <input type="text" class="form-input" placeholder="e.g. Dell">
+                            </div>
+                            <div class="form-group">
+                                <label>Model</label>
+                                <input type="text" class="form-input" placeholder="e.g. Latitude">
                             </div>
                         </div>
+                    </section>
 
-                        <div id="networkDeviceFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">IP Address</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter IP Address">
+                    <section>
+                        <div class="section-title">02 Assignment</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="form-group">
+                                <label>Staff Name</label>
+                                <input type="text" class="form-input">
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Model</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter model">
+                            <div class="form-group">
+                                <label>Staff ID</label>
+                                <input type="text" class="form-input">
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Specification</label>
-                                <textarea class="border rounded-lg w-full p-3" rows="3" placeholder="Enter specification"></textarea>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select class="form-input">
+                                    <option>IT</option>
+                                    <option>HR</option>
+                                    <option>Finance</option>
+                                    <option>Operations</option>
+                                    <option>Facilities</option>
+                                </select>
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Resource/Role</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter resource/role">
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" class="form-input">
                             </div>
                         </div>
+                    </section>
 
-                        <div id="storageFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Total Size</label>
-                                <div class="flex">
-                                    <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter total size">
-                                    <select class="border rounded-lg ml-2 p-3">
-                                        <option value="GB">GB</option>
-                                        <option value="TB">TB</option>
-                                    </select>
+                    <section>
+                        <div class="section-title">03 Technical Specs</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="form-group"><label>IP Address</label><input type="text" class="form-input" placeholder="0.0.0.0"></div>
+                            <div class="form-group"><label>OS</label><input type="text" class="form-input" placeholder="e.g. Windows 11"></div>
+                            <div class="form-group"><label>OS Version</label><input type="text" class="form-input" placeholder="e.g. 23H2"></div>
+                        </div>
+                    </section>
+
+                    <section id="capacitySection" class="hidden">
+                        <div class="section-title">04 Capacity & Performance</div>
+                        <div id="memoryGroup" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="form-group">
+                                <label>Memory Size</label>
+                                <div class="flex gap-2">
+                                    <input type="text" class="form-input flex-1">
+                                    <select class="form-input w-24"><option>GB</option><option>TB</option></select>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">% Utilization</label>
-                                <input type="number" min="0" max="100" class="border rounded-lg w-full p-3" placeholder="0-100%">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Available Space</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter available space">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">IP Address</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter IP Address">
+                            <div class="form-group"><label>Memory Used</label><input type="text" class="form-input"></div>
+                            <div class="form-group"><label>Memory Available</label><input type="text" class="form-input"></div>
+                        </div>
+                        <div id="bandwidthGroup" class="hidden">
+                            <div class="form-group max-w-xs">
+                                <label>Bandwidth</label>
+                                <div class="flex gap-2">
+                                    <input type="text" class="form-input flex-1">
+                                    <select class="form-input w-28"><option>Mbps</option><option>Gbps</option></select>
+                                </div>
                             </div>
                         </div>
+                    </section>
 
-                        <div id="softwareFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Version</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter software version">
+                    <section>
+                        <div class="section-title">05 Description & Security</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group"><label>Description</label><textarea rows="4" class="form-input"></textarea></div>
+                            <div class="form-group"><label>Functionality</label><textarea rows="3" class="form-input"></textarea></div>
+                            <div class="form-group">
+                                <label>Sensitivity</label>
+                                <select class="form-input">
+                                    <option>Public</option>
+                                    <option>Internal</option>
+                                    <option>Confidential</option>
+                                    <option>Restricted</option>
+                                </select>
                             </div>
+                            <div class="form-group"><label>Backup Location</label><input type="text" class="form-input"></div>
                         </div>
+                    </section>
 
-                        <div id="internetConnectivityFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">ISP</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter ISP">
+                    <section>
+                        <div class="section-title">06 Status & Attachments</div>
+                        <div class="space-y-6">
+                            <div class="form-group">
+                                <label>Attachments</label>
+                                <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group">
+                                    <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-cloud-upload-alt text-blue-600 text-xl"></i>
+                                    </div>
+                                    <p class="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
+                                    <p class="text-xs text-slate-400 mt-1">Supports PDF, JPG (Max 10MB)</p>
+                                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.jpeg">
+                                </div>
+                                <div id="filePreviewList" class="hidden mt-4 space-y-2">
+                                    <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <i class="far fa-file-pdf text-red-500"></i>
+                                            <span class="text-sm font-medium text-slate-600">Purchase_Invoice.pdf</span>
+                                        </div>
+                                        <button class="text-slate-400 hover:text-blue-600"><i class="fas fa-download"></i></button>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Bandwidth</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter bandwidth">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Connection Type</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter connection type">
-                            </div>
-                        </div>
 
-                        <div id="printerFields" class="hidden">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-1">Department</label>
-                                <input type="text" class="border rounded-lg w-full p-3" placeholder="Enter department">
+                            <div id="formControls" class="pt-6 space-y-3">
+                                <button type="submit" id="primaryBtn" class="w-full bg-[#2563EB] text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.99] transition-all tracking-wide">
+                                    Create Asset
+                                </button>
+                                <button type="button" onclick="cancelMode()" class="w-full bg-transparent text-slate-400 py-3 rounded-xl font-semibold hover:text-slate-600 transition-colors">
+                                    Cancel
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    <div class="mt-6">
-                        <label class="block text-gray-700 text-sm font-semibold mb-1">Attachments</label>
-                        <div class="border-dashed border-2 border-gray-300 rounded-lg p-6 text-center">
-                            <p class="text-gray-500">Drag & drop files here or click to upload</p>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button type="button" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Create Asset</button>
-                        <button type="button" class="border border-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
-                    </div>
+                    </section>
+
                 </form>
             </div>
         </main>
-        <!-- <aside class="w-1/4 bg-white shadow-md p-4">
-            <h2 class="text-xl font-semibold mb-6">Preview</h2>
-            <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                <h3 class="text-lg font-semibold">Asset Preview</h3>
-                <p class="text-gray-700">Asset Name: <span class="font-bold">Sample Asset</span></p>
-                <p class="text-gray-700">Category: <span class="font-bold">Workstation</span></p>
-                <p class="text-gray-700">Serial Number: <span class="font-bold">123456789</span></p>
-                <p class="text-gray-700">Location: <span class="font-bold">Office Room 101</span></p>
-                <p class="text-gray-700">Status: <span class="font-bold">In Use</span></p>
-            </div>
-        </aside> -->
     </div>
 
     <script>
-        function showFields(category) {
-            const fields = ['workstationFields', 'applicationsFields', 'serverFields', 'networkDeviceFields', 'storageFields', 'softwareFields', 'internetConnectivityFields', 'printerFields'];
-            fields.forEach(field => {
-                document.getElementById(field).classList.add('hidden');
-            });
-            if (category) {
-                document.getElementById(category.toLowerCase() + 'Fields').classList.remove('hidden');
+        // 1. Get Asset ID from URL (e.g., ?id=10)
+        const urlParams = new URLSearchParams(window.location.search);
+        const assetId = urlParams.get('id');
+        const token = localStorage.getItem('token');
+
+        window.onload = async () => {
+            if (assetId) {
+                // If an ID exists, we are in DETAIL mode
+                await loadAssetDetail(assetId);
+            } else {
+                // Otherwise, stay in CREATE mode
+                setMode('create');
+            }
+        };
+
+        //*** Fetching & Populating Data - This function calls the API and maps the data to your form fields.//
+        async function loadAssetDetail(id) {
+            try {
+                const response = await fetch(`http://172.28.192.16/asset/api/get_asset?id=${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    const data = result.data;
+
+                    // Populate Section 1: Identification
+                    document.getElementById('assetName').value = data.Name || '';
+                    document.getElementById('category').value = data.Category || '';
+                    // ... map other fields here ...
+
+                    // Trigger the conditional capacity fields
+                    toggleCapacityFields(data.Category);
+
+                    // Once data is loaded, lock the page to 'detail' mode
+                    setMode('detail', data.Name);
+                } else {
+                    alert("Error loading asset: " + result.message);
+                }
+            } catch (err) {
+                console.error("Fetch error:", err);
             }
         }
+
+        function toggleCapacityFields(category) {
+            const section = document.getElementById('capacitySection');
+            const memGroup = document.getElementById('memoryGroup');
+            const bandGroup = document.getElementById('bandwidthGroup');
+
+            section.classList.add('hidden');
+            memGroup.classList.add('hidden');
+            bandGroup.classList.add('hidden');
+
+            if (['Workstation', 'Server', 'Storage'].includes(category)) {
+                section.classList.remove('hidden');
+                memGroup.classList.remove('hidden');
+            } else if (category === 'Connectivity') {
+                section.classList.remove('hidden');
+                bandGroup.classList.remove('hidden');
+            }
+        }
+
+        function setMode(mode, assetName = "") {
+            const body = document.getElementById('pageBody');
+            const navTitle = document.getElementById('navTitle');
+            const actionBar = document.getElementById('actionBar');
+            const formControls = document.getElementById('formControls');
+            const breadcrumb = document.getElementById('breadcrumbCurrent');
+            const primaryBtn = document.getElementById('primaryBtn');
+            const uploadZone = document.getElementById('dropZone');
+
+            currentMode = mode;
+            body.className = `mode-${mode} lg:ml-0 flex flex-col`; // Toggle CSS modes
+
+            if (mode === 'create') {
+                navTitle.innerText = "Create New Asset";
+                breadcrumb.innerText = "New Asset";
+                primaryBtn.innerText = "Create Asset";
+                actionBar.classList.add('hidden');
+                formControls.classList.remove('hidden');
+                uploadZone.classList.remove('hidden');
+            } 
+            else if (mode === 'detail') {
+                navTitle.innerText = `Asset: ${assetName || "View Asset"}`;
+                breadcrumb.innerText = assetName || "Detail";
+                actionBar.classList.remove('hidden'); // Show Edit/Delete
+                formControls.classList.add('hidden'); // Hide Save/Cancel
+                uploadZone.classList.add('hidden');   // Hide Upload in detail view
+            } 
+            else if (mode === 'edit') {
+                navTitle.innerText = `Edit: ${assetName || "Asset"}`;
+                breadcrumb.innerText = "Edit Mode";
+                primaryBtn.innerText = "Save Changes";
+                actionBar.classList.add('hidden');    // Hide Edit/Delete while editing
+                formControls.classList.remove('hidden');
+                uploadZone.classList.remove('hidden');
+            }
+        }
+
+        function cancelMode() { window.location.href = 'index.html'; }
+        function confirmDelete() { if(confirm("Confirm deletion?")) window.location.href = 'index.html'; }
+        
+        //***** Handle Drag & Drop Interaction ****
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    alert("File is too large! Max size is 10MB.");
+                    return;
+                }
+                // Update UI to show file name (optional)
+                console.log("File selected:", file.name);
+            }
+        }
+
+        
+        document.getElementById('assetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                // Collect all your fields here
+                name: document.getElementById('assetName').value,
+                category: document.getElementById('category').value,
+                // ...
+            };
+
+            const endpoint = assetId 
+                ? `http://172.28.192.16/asset/api/update?id=${assetId}` 
+                : `http://172.28.192.16/asset/api/create`;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert(assetId ? "Changes Saved!" : "Asset Created!");
+                    isUnsaved = false; // Reset warning
+                    window.location.href = 'index.html'; // Go back to the long table
+                }
+            } catch (err) {
+                alert("Action failed. Check console.");
+            }
+        });
+        // Test the "Detail" mode immediately
+        // window.onload = () => setMode('detail', 'Dell Latitude 5540');
     </script>
 </body>
 </html>

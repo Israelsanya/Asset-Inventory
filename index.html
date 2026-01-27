@@ -44,7 +44,7 @@
                 </div>
                 
                 <div class="relative w-full lg:max-w-xl">
-                    <input type="text" id="searchInput" placeholder="Search by name, serial, or location..." 
+                    <input type="text" id="searchInput" placeholder="Search by name, serial, or category..." 
                         class="w-full pl-6 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm transition-all">
                     <button id="clearSearch" class="hidden absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times-circle"></i>
@@ -53,7 +53,7 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <button id="deleteAssetBtn" class="hidden flex-1 lg:flex-none bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 shadow-lg shadow-red-200 transition-all">
+                    <button id="deleteAssetBtn" onclick="deleteSelectedAssets()" class="hidden flex-1 lg:flex-none bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 shadow-lg shadow-red-200 transition-all">
                         <i class="fas fa-trash-alt"></i> <span>Delete</span>
                     </button>
                     <button class="flex-1 lg:flex-none bg-[#10b981] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
@@ -241,6 +241,57 @@
             document.querySelector('tbody').addEventListener('change', updateDeleteButtonVisibility);
         });
 
+        //******* Delete function ******
+        async function deleteSelectedAssets() {
+            const tableBody = document.querySelector('tbody');
+            const token = localStorage.getItem('token');
+            
+            // 1. Map checkboxes to an array of integers as required by API
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'));
+            const idsToDelete = checkedBoxes.map(cb => parseInt(cb.value));
+
+            if (idsToDelete.length === 0) return;
+
+            // 2. Safety Confirmation
+            if (!confirm(`Are you sure you want to permanently delete ${idsToDelete.length} asset(s)?`)) return;
+
+            try {
+                // 3. Update Button UI
+                const deleteBtn = document.getElementById('deleteAssetBtn');
+                const originalContent = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+                deleteBtn.disabled = true;
+
+                // 4. API Request
+                const response = await fetch('http://172.28.192.16/asset/api/delete', {
+                    method: 'POST', 
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "ids": idsToDelete }) // Matches documentation format
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Success feedback
+                    alert(`Success: ${result.message}`); 
+                    
+                    // 5. Refresh the UI
+                    document.getElementById('selectAll').checked = false;
+                    loadAssets(); // Reloads the table to show updated list
+                } else {
+                    alert('Error: ' + (result.message || 'Could not delete assets'));
+                    deleteBtn.innerHTML = originalContent;
+                    deleteBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Delete Error:', error);
+                alert('Connection error. Please check if the server is reachable.');
+                loadAssets(); // Reset table view
+            }
+        }
         function editAsset(id) { 
             console.log("Editing Asset ID:", id); 
         }
