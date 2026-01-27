@@ -56,12 +56,9 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                <span id="selectionCount" class="hidden text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                    0 Selected
-                </span>
-
                 <button id="deleteAssetBtn" class="hidden flex-1 lg:flex-none bg-[#FF0000] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-sm">
-                    <i class="fas fa-trash-alt"></i> Delete Asset
+                    <i class="fas fa-trash-alt"></i> 
+                    <span id="deleteBtnText">Delete Asset</span>
                 </button>
                 
                 <button class="flex-1 lg:flex-none bg-[#50C878] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors shadow-sm">
@@ -75,6 +72,10 @@
                 <button class="flex-1 lg:flex-none bg-[#044BB4] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-800 transition-colors shadow-sm">
                     <i class="fas fa-plus"></i> New Asset
                 </button>
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                <div id="footerItemCount" class="font-medium">0 items</div>
             </div>
         </div>
 
@@ -227,7 +228,11 @@
                         tableBody.insertAdjacentHTML('beforeend', row);
                     });
 
-                    document.querySelector('.font-medium').innerText = `1 - ${result.data.length} of ${result.count} items`;
+                    // FIXED: Target the specific ID so it doesn't hijack the logout button
+                    const footerCount = document.getElementById('footerItemCount');
+                    if (footerCount) {
+                        footerCount.innerText = `1 - ${result.data.length} of ${result.count} items`;
+                    }
 
                 } else {
                     tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load: ${result.message}</td></tr>`;
