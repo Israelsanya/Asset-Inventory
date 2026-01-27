@@ -15,23 +15,17 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-
     <div class="max-w-[1600px] mx-auto bg-white rounded-xl p-6 custom-shadow">
         
         <div class="flex flex-col lg:flex-row justify-between items-center mb-8 gap-6">
-    
             <div class="flex items-center gap-3 w-full lg:w-auto relative">
                 <div class="relative group">
-                    <img src="images/FirstbankIcon.png" 
-                        alt="User Menu" 
-                        id="userMenuBtn"
+                    <img src="images/FirstbankIcon.png" alt="User Menu" id="userMenuBtn"
                         class="w-10 h-10 object-contain cursor-pointer hover:opacity-80 transition-opacity border-transparent hover:border-gray-200 p-0.5">
                     
                     <div id="userDropdown" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
                         <div class="py-2">
-                            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-bold tracking-wider">
-                                User Options
-                            </div>
+                            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-bold tracking-wider">User Options</div>
                             <hr class="my-1 border-gray-50">
                             <a href="javascript:void(0)" onclick="handleLogout()" class="flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -40,18 +34,15 @@
                         </div>
                     </div>
                 </div>
-
                 <h1 class="text-[#9CA3AF] text-xl font-semibold whitespace-nowrap">Asset Inventory</h1>
             </div>
             
             <div class="relative w-full lg:max-w-md">
                 <input type="text" id="searchInput" placeholder="Search Assets..." 
                     class="w-full pl-5 pr-20 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm transition-all">
-                
                 <button id="clearSearch" class="hidden absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
                     <i class="fas fa-times-circle"></i>
                 </button>
-
                 <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
 
@@ -60,22 +51,15 @@
                     <i class="fas fa-trash-alt"></i> 
                     <span id="deleteBtnText">Delete Asset</span>
                 </button>
-                
                 <button class="flex-1 lg:flex-none bg-[#50C878] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors shadow-sm">
                     <i class="fas fa-file-import"></i> Import Excel
                 </button>
-                
                 <button class="flex-1 lg:flex-none bg-[#F59E0B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-amber-600 transition-colors shadow-sm">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </button>
-                
                 <button class="flex-1 lg:flex-none bg-[#044BB4] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-800 transition-colors shadow-sm">
                     <i class="fas fa-plus"></i> New Asset
                 </button>
-            </div>
-
-            <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-                <div id="footerItemCount" class="font-medium">0 items</div>
             </div>
         </div>
 
@@ -94,26 +78,13 @@
                     </tr>
                 </thead>
                 <tbody class="text-sm text-[#374151]">
-                    <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                        <td class="p-4"><input type="checkbox" class="w-4 h-4 rounded"></td>
-                        <td class="p-4 font-medium text-gray-900">MacBook Pro 14"</td>
-                        <td class="p-4">Laptop</td>
-                        <td class="p-4 font-mono text-xs">SN-98234-X</td>
-                        <td class="p-4">Lagos Office</td>
-                        <td class="p-4">Operations</td>
-                        <td class="p-4">20-10-2023 <span class="text-[10px] block text-gray-400 text-xs">09:15:00</span></td>
-                        <td class="p-4 text-center">
-                            <button class="text-green-500 hover:text-green-700 p-2 bg-green-50 rounded-lg transition-colors">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
                     </tbody>
             </table>
         </div>
 
         <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <div class="font-medium">1 - 20 of 200 items</div>
+            <div id="footerStatus" class="font-medium text-gray-600">Loading assets...</div>
+            
             <div class="flex items-center gap-2">
                 <button class="w-8 h-8 flex items-center justify-center border rounded-md hover:bg-gray-50"><i class="fas fa-chevron-left text-xs"></i></button>
                 <button class="w-8 h-8 flex items-center justify-center bg-[#044BB4] text-white rounded-md font-medium">1</button>
@@ -136,229 +107,189 @@
     </div>
 
     <script>
-        // --- 1. UI & MENU LOGIC ---
-        const menuBtn = document.getElementById('userMenuBtn');
-        const dropdown = document.getElementById('userDropdown');
+    // --- 1. GLOBAL STATE ---
+    let totalAssetCount = 0;
+    let visibleAssetCount = 0;
 
-        // Toggle dropdown
-        if (menuBtn) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
-        }
+    // --- 2. UI & MENU LOGIC ---
+    const menuBtn = document.getElementById('userMenuBtn');
+    const dropdown = document.getElementById('userDropdown');
 
-        // Close dropdown when clicking outside
-        window.addEventListener('click', () => {
-            if (dropdown) dropdown.classList.add('hidden');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
         });
+    }
 
-        // Prevent menu from closing if someone clicks inside the dropdown itself
-        if (dropdown) {
-            dropdown.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
+    window.addEventListener('click', () => {
+        if (dropdown) dropdown.classList.add('hidden');
+    });
 
-        // Logout Functionality
-        function handleLogout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            console.log('Session cleared. Redirecting...');
+    function handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+
+    // AUTH GUARD
+    window.onload = function() {
+        const token = localStorage.getItem('token');
+        if (!token) {
             window.location.href = 'login.html';
+        } else {
+            loadAssets();
         }
+    }
 
-        // AUTH GUARD: Redirect if no token found
-        window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
-            } else {
-                loadAssets(); // Only load assets if token exists
-            }
-        }
+    // --- 3. DATA FETCHING ---
+    async function loadAssets() {
+        const tableBody = document.querySelector('tbody');
+        const footerStatus = document.getElementById('footerStatus');
+        const token = localStorage.getItem('token');
 
-        // --- 2. DATA FETCHING LOGIC ---
-        async function loadAssets() {
-            const tableBody = document.querySelector('tbody');
-            const token = localStorage.getItem('token');
+        tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching assets...</td></tr>`;
 
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="p-10 text-center text-gray-500">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Fetching assets from server...
-                    </td>
-                </tr>
-            `;
-
-            try {
-                const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'success' && result.data) {
-                    tableBody.innerHTML = ''; 
-
-                    result.data.forEach(asset => {
-                        const row = `
-                            <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                                <td class="p-4"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded"></td>
-                                <td class="p-4 font-medium text-gray-900">${asset.Name || 'N/A'}</td>
-                                <td class="p-4">${asset.Category || 'N/A'}</td>
-                                <td class="p-4 font-mono text-xs text-blue-600">${asset.SerialNo || 'N/A'}</td>
-                                <td class="p-4">${asset.Location || 'N/A'}</td>
-                                <td class="p-4">${asset.Department || 'N/A'}</td>
-                                <td class="p-4">
-                                    <span class="text-sm">Recently Added</span>
-                                    <span class="text-[10px] block text-gray-400">ID: #${asset.id}</span>
-                                </td>
-                                <td class="p-4 text-center">
-                                    <button onclick="editAsset('${asset.id}')" class="text-green-500 hover:text-green-700 p-2 bg-green-50 rounded-lg transition-colors">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                        tableBody.insertAdjacentHTML('beforeend', row);
-                    });
-
-                    // FIXED: Target the specific ID so it doesn't hijack the logout button
-                    const footerCount = document.getElementById('footerItemCount');
-                    if (footerCount) {
-                        footerCount.innerText = `1 - ${result.data.length} of ${result.count} items`;
-                    }
-
-                } else {
-                    tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load: ${result.message}</td></tr>`;
-                }
-            } catch (error) {
-                console.error('Fetch Error:', error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Connection Error. Ensure API is reachable.</td></tr>`;
-            }
-        }
-
-        function editAsset(id) {
-            console.log("Editing asset:", id);
-            // window.location.href = `edit.html?id=${id}`;
-        }
-
-        // --- 3. INTERACTIVE TABLE LOGIC (SEARCH, SELECT, DELETE) ---
-
-        function updateDeleteButtonVisibility() {
-            const tableBody = document.querySelector('tbody');
-            const deleteBtn = document.getElementById('deleteAssetBtn');
-            const countSpan = document.getElementById('selectionCount');
-            
-            // Only count checkboxes in visible rows
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'))
-                                    .filter(cb => cb.closest('tr').style.display !== 'none');
-            
-            const count = checkedBoxes.length;
-
-            if (count > 0) {
-                deleteBtn.classList.remove('hidden');
-                if (countSpan) {
-                    countSpan.classList.remove('hidden');
-                    countSpan.innerText = `${count} ${count === 1 ? 'Asset' : 'Assets'} Selected`;
-                }
-            } else {
-                deleteBtn.classList.add('hidden');
-                if (countSpan) countSpan.classList.add('hidden');
-            }
-        }
-
-        function filterAssets() {
-            const searchInput = document.getElementById('searchInput');
-            const filter = searchInput.value.toLowerCase();
-            const tableRows = document.querySelectorAll('tbody tr');
-            const selectAllCheckbox = document.getElementById('selectAll');
-
-            // Reset "Select All" when a new search starts
-            if (selectAllCheckbox) selectAllCheckbox.checked = false;
-
-            tableRows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                if (text.includes(filter)) {
-                    row.style.display = ""; 
-                } else {
-                    row.style.display = "none";
-                    // Uncheck if it becomes hidden
-                    const cb = row.querySelector('input[type="checkbox"]');
-                    if (cb) cb.checked = false;
-                }
-            });
-            updateDeleteButtonVisibility();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('searchInput');
-            const clearBtn = document.getElementById('clearSearch');
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const deleteBtn = document.getElementById('deleteAssetBtn');
-            const tableBody = document.querySelector('tbody');
-
-            // Search Input Logic
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    if (clearBtn) clearBtn.classList.toggle('hidden', searchInput.value.length === 0);
-                    filterAssets(); 
-                });
-            }
-
-            // Clear Search Logic
-            if (clearBtn) {
-                clearBtn.addEventListener('click', () => {
-                    searchInput.value = '';
-                    clearBtn.classList.add('hidden');
-                    searchInput.focus();
-                    filterAssets();
-                });
-            }
-
-            // Select All Logic
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', () => {
-                    const allRows = tableBody.querySelectorAll('tr');
-                    allRows.forEach(row => {
-                        if (row.style.display !== 'none') {
-                            const cb = row.querySelector('input[type="checkbox"]');
-                            if (cb) cb.checked = selectAllCheckbox.checked;
-                        }
-                    });
-                    updateDeleteButtonVisibility();
-                });
-            }
-
-            // Individual Checkbox Logic (Event Delegation)
-            tableBody.addEventListener('change', (e) => {
-                if (e.target.type === 'checkbox') {
-                    updateDeleteButtonVisibility();
-                    if (!e.target.checked && selectAllCheckbox) {
-                        selectAllCheckbox.checked = false;
-                    }
+        try {
+            const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
-            // Delete Button Action
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', async () => {
-                    const checkedBoxes = tableBody.querySelectorAll('input[type="checkbox"]:checked');
-                    const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+            const result = await response.json();
 
-                    if (confirm(`Are you sure you want to delete ${idsToDelete.length} asset(s)?`)) {
-                        console.log("Deleting IDs:", idsToDelete);
-                        // Insert fetch call to your friend's API here
-                        alert("Delete request for: " + idsToDelete.join(', '));
-                    }
+            if (result.status === 'success' && result.data) {
+                tableBody.innerHTML = ''; 
+                totalAssetCount = result.count || result.data.length;
+                visibleAssetCount = result.data.length;
+
+                result.data.forEach(asset => {
+                    const row = `
+                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
+                            <td class="p-4"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600"></td>
+                            <td class="p-4 font-medium text-gray-900">${asset.Name || 'N/A'}</td>
+                            <td class="p-4">${asset.Category || 'N/A'}</td>
+                            <td class="p-4 font-mono text-xs text-blue-600">${asset.SerialNo || 'N/A'}</td>
+                            <td class="p-4">${asset.Location || 'N/A'}</td>
+                            <td class="p-4">${asset.Department || 'N/A'}</td>
+                            <td class="p-4">
+                                <span class="text-sm">Recently Added</span>
+                                <span class="text-[10px] block text-gray-400">ID: #${asset.id}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <button onclick="editAsset('${asset.id}')" class="text-green-500 hover:text-green-700 p-2 bg-green-50 rounded-lg transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
                 });
+
+                if (footerStatus) {
+                    footerStatus.innerText = `1 - ${visibleAssetCount} of ${totalAssetCount} items`;
+                }
+
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Failed to load assets.</td></tr>`;
+            }
+        } catch (error) {
+            tableBody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500">Connection Error.</td></tr>`;
+        }
+    }
+
+    // --- 4. SELECTION & FILTER LOGIC ---
+    function updateDeleteButtonVisibility() {
+        const tableBody = document.querySelector('tbody');
+        const deleteBtn = document.getElementById('deleteAssetBtn');
+        const footerStatus = document.getElementById('footerStatus');
+        
+        const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'))
+                                  .filter(cb => cb.closest('tr').style.display !== 'none');
+        
+        const count = checkedBoxes.length;
+
+        if (count > 0) {
+            deleteBtn.classList.remove('hidden');
+            if (footerStatus) {
+                footerStatus.innerHTML = `<span class="text-blue-600 font-bold">${count} item${count > 1 ? 's' : ''} selected</span>`;
+            }
+        } else {
+            deleteBtn.classList.add('hidden');
+            if (footerStatus) {
+                footerStatus.innerText = `1 - ${visibleAssetCount} of ${totalAssetCount} items`;
+            }
+        }
+    }
+
+    function filterAssets() {
+        const searchInput = document.getElementById('searchInput');
+        const filter = searchInput.value.toLowerCase();
+        const tableRows = document.querySelectorAll('tbody tr');
+        const selectAllCheckbox = document.getElementById('selectAll');
+
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+
+        tableRows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(filter)) {
+                row.style.display = ""; 
+            } else {
+                row.style.display = "none";
+                const cb = row.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = false;
             }
         });
-    </script>
+        updateDeleteButtonVisibility();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const tableBody = document.querySelector('tbody');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                if (clearBtn) clearBtn.classList.toggle('hidden', searchInput.value.length === 0);
+                filterAssets(); 
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearBtn.classList.add('hidden');
+                filterAssets();
+            });
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', () => {
+                const allRows = tableBody.querySelectorAll('tr');
+                allRows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const cb = row.querySelector('input[type="checkbox"]');
+                        if (cb) cb.checked = selectAllCheckbox.checked;
+                    }
+                });
+                updateDeleteButtonVisibility();
+            });
+        }
+
+        tableBody.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                updateDeleteButtonVisibility();
+            }
+        });
+    });
+
+    function editAsset(id) {
+        console.log("Editing:", id);
+    }
+</script>
 </body>
 </html>
