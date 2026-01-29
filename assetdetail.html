@@ -47,7 +47,8 @@
                 </div>
 
                 <div id="actionBar" class="hidden flex items-center gap-3">
-                    <button onclick="setMode('edit')" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md transition-all">
+                    <button onclick="setMode('edit', document.getElementById('assetName').value)" 
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md">
                         <i class="fas fa-edit mr-2"></i>Edit
                     </button>
                     <button onclick="confirmDelete()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition-all">
@@ -293,8 +294,29 @@
             }
         }
 
+        
+        // *** NEW CODE BELOW TO HANDLE UNSAVED CHANGES WARNING ***
+        let isDirty = false; // Flag to track if the form has been modified
+
+        // Attach change listeners to the form
+        document.getElementById('assetForm').addEventListener('input', () => {
+            if (currentMode === 'edit' || currentMode === 'create') {
+                isDirty = true;
+            }
+        });
+
+        // This handles the browser "Back" button, refreshing, or closing the tab
+        window.onbeforeunload = function() {
+            if (isDirty) {
+                return "You have unsaved changes. Are you sure you want to leave?";
+            }
+        };
+
+        // Update setMode to reset the "Dirty" status when switching modes
         function setMode(mode, assetName = "") {
             currentMode = mode;
+            isDirty = false; // Reset tracking when we switch modes successfully
+            
             const body = document.getElementById('pageBody');
             const actionBar = document.getElementById('actionBar');
             const formControls = document.getElementById('formControls');
@@ -316,7 +338,33 @@
             }
         }
 
-        function cancelMode() { window.location.href = 'index.html'; }
+        // Placeholder for your future Save logic
+        async function handleSave() {
+            // ... logic to send data to API ...
+            
+            isDirty = false; // Mark as clean so we can navigate away
+            // window.location.href = 'index.html';
+        }
+        
+        function cancelMode() {
+            // If we've made changes, we should still double-check before discarding
+            if (isDirty) {
+                if (!confirm("Discard unsaved changes?")) {
+                    return; // Stay in Edit mode
+                }
+            }
+
+            // THE TRANSITION:
+            if (assetId && currentMode === 'edit') {
+                // Just flip the UI back to Detail mode
+                const assetName = document.getElementById('assetName').value;
+                setMode('detail', assetName);
+            } else {
+                // If we are in 'Create' mode, we have to go back to the list
+                isDirty = false; // Reset flag so browser doesn't block us
+                window.location.href = 'index.html';
+            }
+        }
 
         function confirmDelete() {
             if(confirm("Permanently delete this asset?")) {
