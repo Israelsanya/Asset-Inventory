@@ -198,14 +198,20 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const assetId = urlParams.get('id');
+        const requestedMode = urlParams.get('mode'); // Captures "edit" from the URL
         const token = localStorage.getItem('token');
         let currentMode = 'create';
 
         window.onload = async () => {
             if (assetId) {
-                // Show a "Loading..." state in the title if you like
                 document.getElementById('navTitle').innerText = "Loading Asset...";
                 await loadAssetDetail(assetId);
+                
+                // NEW: If the URL has mode=edit, force the UI into Edit Mode immediately
+                if (requestedMode === 'edit') {
+                    const assetName = document.getElementById('assetName').value;
+                    setMode('edit', assetName);
+                }
             } else {
                 setMode('create');
             }
@@ -213,18 +219,16 @@
 
         async function loadAssetDetail(id) {
             try {
-                // UPDATE: Fetching from the LIST API because it contains the "Deep" data
                 const response = await fetch('http://172.28.192.16/asset/api/list_assets', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // UPDATE: Finding the specific object in the array provided by your friend
-                    const data = result.data.find(a => a.id === id);
+                    const data = result.data.find(a => String(a.id) === String(id));
                     if (!data) return alert("Asset not found");
 
-                    // Mapping API Keys to HTML IDs
+                    // 1. Basic Mapping
                     document.getElementById('assetName').value = data.Name || '';
                     document.getElementById('category').value = data.Category || '';
                     document.getElementById('serialNo').value = data.SerialNo || '';
@@ -242,39 +246,35 @@
                     document.getElementById('sensitivity').value = data.Sensitivity || '';
                     document.getElementById('backupLoc').value = data.Backup_Location || '';
                     
-                    // Capacity Data
-                    document.getElementById('memSize').value = data.Memory_Size || '';
+                    // 2. Memory Size Logic (Splitting "16GB" into Value + Unit)
+                    if (data.Memory_Size) {
+                        const memVal = parseInt(data.Memory_Size);
+                        const memUnit = data.Memory_Size.replace(/[0-9]/g, '').trim();
+                        document.getElementById('memSize').value = memVal || '';
+                        if (memUnit) document.getElementById('memUnit').value = memUnit;
+                    }
                     document.getElementById('memUsed').value = data.Memory_Used || '';
                     document.getElementById('memAvail').value = data.Memory_Available || '';
-                    document.getElementById('bandwidth').value = data.Bandwidth || '';
+
+                    // 3. Bandwidth Logic (Splitting "1Gbps" into Value + Unit)
+                    if (data.Bandwidth) {
+                        const bandVal = parseInt(data.Bandwidth);
+                        const bandUnit = data.Bandwidth.replace(/[0-9]/g, '').trim();
+                        document.getElementById('bandwidth').value = bandVal || '';
+                        if (bandUnit) document.getElementById('bandUnit').value = bandUnit;
+                    }
 
                     toggleCapacityFields(data.Category);
+                    
+                    // Default to detail mode unless we specifically requested 'edit' in onload
                     setMode('detail', data.Name);
                 }
-
-                // --- Inside loadAssetDetail function ---
-                // Handle Memory Size (Splitting "16GB" into "16" and "GB")
-                if (data.Memory_Size) {
-                    const memVal = parseInt(data.Memory_Size); // Gets the number
-                    const memUnit = data.Memory_Size.replace(/[0-9]/g, ''); // Gets the text part
-                    
-                    document.getElementById('memSize').value = memVal || data.Memory_Size;
-                    if (memUnit) document.getElementById('memUnit').value = memUnit;
-                }
-
-                // Handle Bandwidth (Splitting "1Gbps" into "1" and "Gbps")
-                if (data.Bandwidth) {
-                    const bandVal = parseInt(data.Bandwidth);
-                    const bandUnit = data.Bandwidth.replace(/[0-9]/g, '');
-                    
-                    document.getElementById('bandwidth').value = bandVal || data.Bandwidth;
-                    if (bandUnit) document.getElementById('bandUnit').value = bandUnit;
-                }
-
-            } catch (err) { console.error("Error:", err); }
+            } catch (err) { 
+                console.error("Error:", err); 
+                document.getElementById('navTitle').innerText = "Error Loading Asset";
+            }
         }
 
-        // UPDATE: Expanded category list for conditional fields
         function toggleCapacityFields(category) {
             const section = document.getElementById('capacitySection');
             const memGroup = document.getElementById('memoryGroup');
@@ -293,21 +293,23 @@
             }
         }
 
-        // UPDATE: Centralized UI state management
         function setMode(mode, assetName = "") {
             currentMode = mode;
             const body = document.getElementById('pageBody');
             const actionBar = document.getElementById('actionBar');
             const formControls = document.getElementById('formControls');
+            const breadcrumb = document.getElementById('breadcrumbCurrent');
             
             body.className = `mode-${mode} lg:ml-0 flex flex-col`;
 
             if (mode === 'detail') {
                 document.getElementById('navTitle').innerText = `Asset: ${assetName}`;
+                breadcrumb.innerText = "Detail View";
                 actionBar.classList.remove('hidden');
                 formControls.classList.add('hidden');
             } else {
                 document.getElementById('navTitle').innerText = mode === 'create' ? "Create New Asset" : "Edit Asset";
+                breadcrumb.innerText = mode === 'create' ? "New Asset" : "Edit Mode";
                 actionBar.classList.add('hidden');
                 formControls.classList.remove('hidden');
                 document.getElementById('primaryBtn').innerText = mode === 'create' ? "Create Asset" : "Save Changes";
@@ -318,7 +320,6 @@
 
         function confirmDelete() {
             if(confirm("Permanently delete this asset?")) {
-                // Uses the Delete API your friend documented
                 fetch(`http://172.28.192.16/asset/api/delete_asset?id=${assetId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }

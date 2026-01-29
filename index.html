@@ -62,7 +62,7 @@
                     <button class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
                         <i class="fas fa-file-excel"></i> Report
                     </button>
-                    <button onclick="window.location.href='add_asset.html'" class="flex-1 lg:flex-none bg-[#044BB4] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                    <button onclick="window.location.href='assetdetail.html'" class="flex-1 lg:flex-none bg-[#044BB4] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
                         <i class="fas fa-plus"></i> New Asset
                     </button>
                 </div>
@@ -175,8 +175,8 @@
                             <tr class="hover:bg-blue-50/40">
                                 <td class="p-5 text-center"><input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600"></td>
                                 
-                                <td class="p-5 font-semibold text-slate-700">
-                                    <a href="assetdetail.html?id=${asset.id}" class="text-blue-600 hover:underline decoration-2 underline-offset-4">
+                                <td class="p-5 font-semibold text-slate-700 transition-colors">
+                                    <a href="assetdetail.html?id=${asset.id}" class="hover:text-blue-600 block">
                                         ${asset.Name || 'N/A'}
                                     </a>
                                 </td>
@@ -191,7 +191,7 @@
                                 </td>
                                 
                                 <td class="p-5 text-center">
-                                    <a href="assetdetail.html?id=${asset.id}" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
+                                    <a href="assetdetail.html?id=${asset.id}&mode=edit" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </td>
