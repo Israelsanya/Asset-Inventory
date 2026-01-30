@@ -16,6 +16,14 @@
         /* Ensuring rows have enough height to prevent the "squished" look */
         tbody tr { min-height: 70px; transition: all 0.2s; }
         .main-content { flex: 1; padding: 2rem; }
+        /* Adjust base font size for different resolutions */
+        html { font-size: 16px; /* Default */}
+        @media (max-width: 1536px) { html { font-size: 14px; } /* Automatically "zooms out" on smaller laptops */}
+        @media (min-width: 1920px) { html { font-size: 16px; } /* Keeps it crisp on large monitors */}
+        /* Ensure the container doesn't feel too stretched on ultrawide screens */
+        .custom-container { max-width: 1600px; margin: 0 auto; width: 95%; /* Provides a consistent "margin" on all sides */}
+        /* Add a pointer for the rows since they are now clickable */
+        tbody tr {cursor: pointer;}
     </style>
 </head>
 <body class="bg-[#f8fafc]">
@@ -101,10 +109,10 @@
                         <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all"><i class="fas fa-chevron-right text-xs"></i></button>
                     </div>
                     
-                    <select class="ml-4 p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 font-medium">
-                        <option>20 / Page</option>
-                        <option>50 / Page</option>
-                        <option>100 / Page</option>
+                    <select id="pageSizeSelect" onchange="updatePageSize()" class="ml-4 p-2.5 bg-gray-50 border border-gray-200 rounded-xl ...">
+                        <option value="20">20 / Page</option>
+                        <option value="50">50 / Page</option>
+                        <option value="100">100 / Page</option>
                     </select>
                 </div>
             </div>
@@ -119,6 +127,10 @@
         // Keep your existing script logic exactly as it was
         let totalAssetCount = 0;
         let visibleAssetCount = 0;
+        let allAssets = [];       // Will hold the full list from the API
+        let filteredAssets = [];  // Will hold search results
+        let currentPage = 1;
+        let pageSize = 20;
 
         const menuBtn = document.getElementById('userMenuBtn');
         const dropdown = document.getElementById('userDropdown');
@@ -151,7 +163,6 @@
 
         async function loadAssets() {
             const tableBody = document.querySelector('tbody');
-            const footerStatus = document.getElementById('footerStatus');
             const token = localStorage.getItem('token');
 
             tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-gray-400"><i class="fas fa-circle-notch fa-spin fa-2x mb-3 block mx-auto"></i> Synchronizing Assets...</td></tr>`;
@@ -165,49 +176,91 @@
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
-                    tableBody.innerHTML = ''; 
-                    totalAssetCount = result.count || result.data.length;
-                    visibleAssetCount = result.data.length;
-
-                    // Inside index.html -> loadAssets() function
-                    result.data.forEach(asset => {
-                        const row = `
-                            <tr class="hover:bg-blue-50/40 cursor-pointer transition-all" 
-                                ondblclick="window.location.href='assetdetail.html?id=${asset.id}'"
-                                title="Double-click to view details">
-                                
-                                <td class="p-5 text-center" ondblclick="event.stopPropagation()">
-                                    <input type="checkbox" value="${asset.id}" class="w-4 h-4 rounded accent-blue-600">
-                                </td>
-                                
-                                <td class="p-5 font-semibold text-slate-700">
-                                    <a href="assetdetail.html?id=${asset.id}" class="hover:text-blue-600 transition-colors">
-                                        ${asset.Name || 'N/A'}
-                                    </a>
-                                </td>
-
-                                <td class="p-5 text-slate-500">${asset.Category || 'N/A'}</td>
-                                <td class="p-5 font-mono text-xs font-bold text-blue-600">${asset.SerialNo || 'N/A'}</td>
-                                <td class="p-5 text-slate-500">${asset.Location || 'N/A'}</td>
-                                <td class="p-5 text-slate-500">${asset.Department || 'N/A'}</td>
-                                <td class="p-5 text-slate-400 text-xs">${asset.CreatedDate || 'N/A'}</td>
-                                
-                                <td class="p-5 text-center" ondblclick="event.stopPropagation()">
-                                    <a href="assetdetail.html?id=${asset.id}&mode=edit" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
-                            </tr>`;
-                        tableBody.insertAdjacentHTML('beforeend', row);
-                    });
-
-                    footerStatus.innerText = `Showing 1 - ${visibleAssetCount} of ${totalAssetCount} total assets`;
+                    allAssets = result.data; // Store the full list
+                    filteredAssets = [...allAssets]; // Default filtered list is the full list
+                    displayPage(1); // Show the first page
                 } else {
                     tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-red-400">Unable to retrieve data.</td></tr>`;
                 }
             } catch (error) {
                 tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-red-400">Network connection failed.</td></tr>`;
             }
+        }
+
+        //*****This is the Display Page and Render Pagination which slice of the array to show based on the page number.
+        function displayPage(page) {
+            currentPage = page;
+            const tableBody = document.querySelector('tbody');
+            tableBody.innerHTML = ''; 
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paginatedItems = filteredAssets.slice(start, end);
+
+            if (paginatedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-gray-400">No matching assets found.</td></tr>`;
+            } else {
+                paginatedItems.forEach(asset => {
+                    const row = `
+                        <tr class="hover:bg-blue-50/40 cursor-pointer transition-all" 
+                            ondblclick="window.location.href='assetdetail.html?id=${asset.id}'">
+                            <td class="p-5 text-center" ondblclick="event.stopPropagation()">
+                                <input type="checkbox" value="${asset.id}" class="asset-checkbox w-4 h-4 rounded accent-blue-600">
+                            </td>
+                            <td class="p-5 font-semibold text-slate-700">
+                                <a href="assetdetail.html?id=${asset.id}" class="hover:text-blue-600 transition-colors">${asset.Name || 'N/A'}</a>
+                            </td>
+                            <td class="p-5 text-slate-500">${asset.Category || 'N/A'}</td>
+                            <td class="p-5 font-mono text-xs font-bold text-blue-600">${asset.SerialNo || 'N/A'}</td>
+                            <td class="p-5 text-slate-500">${asset.Location || 'N/A'}</td>
+                            <td class="p-5 text-slate-500">${asset.Department || 'N/A'}</td>
+                            <td class="p-5 text-slate-400 text-xs">${asset.CreatedDate || 'N/A'}</td>
+                            <td class="p-5 text-center" ondblclick="event.stopPropagation()">
+                                <a href="assetdetail.html?id=${asset.id}&mode=edit" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            updateFooterStatus(filteredAssets.length === 0 ? 0 : start + 1, Math.min(end, filteredAssets.length), filteredAssets.length);
+            renderPaginationControls();
+            updateDeleteButtonVisibility(); // Ensure delete button hides/shows correctly on page change
+        }
+
+        function updateFooterStatus(start, end, total) {
+            const footerStatus = document.getElementById('footerStatus');
+            if (total === 0) {
+                footerStatus.innerText = "No assets found";
+            } else {
+                footerStatus.innerText = `Showing ${start} - ${end} of ${total} assets`;
+            }
+        }
+
+        function renderPaginationControls() {
+            const container = document.querySelector('.flex.items-center.gap-1');
+            const totalPages = Math.ceil(filteredAssets.length / pageSize);
+            let html = '';
+
+            // Previous Button
+            html += `<button onclick="displayPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"><i class="fas fa-chevron-left text-xs"></i></button>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const activeClass = i === currentPage ? 'bg-[#044BB4] text-white shadow-lg shadow-blue-100' : 'border border-gray-200 hover:bg-white';
+                    html += `<button onclick="displayPage(${i})" class="w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${activeClass}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="px-1 text-gray-400">...</span>`;
+                }
+            }
+
+            // Next Button
+            html += `<button onclick="displayPage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"><i class="fas fa-chevron-right text-xs"></i></button>`;
+
+            container.innerHTML = html;
         }
 
         function updateDeleteButtonVisibility() {
@@ -230,25 +283,64 @@
         function filterAssets() {
             const searchInput = document.getElementById('searchInput');
             const filter = searchInput.value.toLowerCase();
-            const tableRows = document.querySelectorAll('tbody tr');
+            const clearBtn = document.getElementById('clearSearch');
+
+            // Show/Hide the "X" button in the search bar
+            if (filter.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Filter the actual data array instead of the DOM rows
+            filteredAssets = allAssets.filter(asset => {
+                const name = (asset.Name || '').toLowerCase();
+                const serial = (asset.SerialNo || '').toLowerCase();
+                const category = (asset.Category || '').toLowerCase();
+                const location = (asset.Location || '').toLowerCase();
+                const dept = (asset.Department || '').toLowerCase();
+
+                return name.includes(filter) || 
+                    serial.includes(filter) || 
+                    category.includes(filter) || 
+                    location.includes(filter) || 
+                    dept.includes(filter);
+            });
+
+            // Reset to page 1 and refresh the display
+            displayPage(1);
+            
+            // Reset "Select All" checkbox
             const selectAllCheckbox = document.getElementById('selectAll');
             if (selectAllCheckbox) selectAllCheckbox.checked = false;
-            tableRows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(filter) ? "" : "none";
-            });
+            
             updateDeleteButtonVisibility();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Search input
             document.getElementById('searchInput').addEventListener('input', filterAssets);
+
+            // Clear search button
+            document.getElementById('clearSearch').addEventListener('click', () => {
+                const input = document.getElementById('searchInput');
+                input.value = '';
+                filterAssets(); // Refresh list
+            });
+
+            // Select All (Only selects items on the CURRENT page)
             document.getElementById('selectAll').addEventListener('change', function() {
-                document.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => {
-                    if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
-                });
+                const checkboxes = document.querySelectorAll('.asset-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
                 updateDeleteButtonVisibility();
             });
-            document.querySelector('tbody').addEventListener('change', updateDeleteButtonVisibility);
+
+            // Listen for individual checkbox changes
+            document.querySelector('tbody').addEventListener('change', (e) => {
+                if (e.target.classList.contains('asset-checkbox')) {
+                    updateDeleteButtonVisibility();
+                }
+            });
         });
 
         //******* Delete function ******
@@ -302,6 +394,12 @@
                 loadAssets(); // Reset table view
             }
         }
+
+        function updatePageSize() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            displayPage(1);
+        }
+        
         function editAsset(id) { 
             console.log("Editing Asset ID:", id); 
         }
