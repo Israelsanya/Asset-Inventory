@@ -102,14 +102,20 @@
                 
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1">
-                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all"><i class="fas fa-chevron-left text-xs"></i></button>
-                        <button class="w-10 h-10 flex items-center justify-center bg-[#044BB4] text-white rounded-xl font-bold shadow-lg shadow-blue-100">1</button>
-                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all">2</button>
-                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all">3</button>
-                        <button class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white hover:shadow-sm transition-all"><i class="fas fa-chevron-right text-xs"></i></button>
+                        </div>
+
+                    <div class="flex items-center gap-2 px-3 border-l border-gray-200 ml-2">
+                        <span class="text-xs text-gray-400 font-medium">Go to</span>
+                        <input type="number" id="jumpPageInput" min="1" 
+                            class="w-12 h-10 text-center bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                            placeholder="#">
+                        <button onclick="jumpToPage()" 
+                            class="h-10 px-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-all">
+                            Go
+                        </button>
                     </div>
-                    
-                    <select id="pageSizeSelect" onchange="updatePageSize()" class="ml-4 p-2.5 bg-gray-50 border border-gray-200 rounded-xl ...">
+
+                    <select id="pageSizeSelect" onchange="updatePageSize()" class="ml-2 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 outline-none">
                         <option value="20">20 / Page</option>
                         <option value="50">50 / Page</option>
                         <option value="100">100 / Page</option>
@@ -242,6 +248,8 @@
         function renderPaginationControls() {
             const container = document.querySelector('.flex.items-center.gap-1');
             const totalPages = Math.ceil(filteredAssets.length / pageSize);
+            const jumpInput = document.getElementById('jumpPageInput');
+            if (jumpInput) jumpInput.max = totalPages;
             let html = '';
 
             // Previous Button
@@ -267,7 +275,9 @@
             const tableBody = document.querySelector('tbody');
             const deleteBtn = document.getElementById('deleteAssetBtn');
             const footerStatus = document.getElementById('footerStatus');
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked')).filter(cb => cb.closest('tr').style.display !== 'none');
+            
+            // Count checked boxes on the current page
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
             const count = checkedBoxes.length;
 
             if (count > 0) {
@@ -275,24 +285,24 @@
                 footerStatus.innerHTML = `<span class="text-blue-600 font-bold"><i class="fas fa-check-circle mr-2"></i>${count} asset${count > 1 ? 's' : ''} selected</span>`;
             } else {
                 deleteBtn.classList.add('hidden');
-                footerStatus.innerText = `Showing 1 - ${visibleAssetCount} of ${totalAssetCount} total assets`;
+                // Call updateFooterStatus to restore the "Showing X - Y of Z" text
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                updateFooterStatus(filteredAssets.length === 0 ? 0 : start + 1, Math.min(end, filteredAssets.length), filteredAssets.length);
             }
         }
 
-        // ... Search and selection event listeners remain the same ...
         function filterAssets() {
             const searchInput = document.getElementById('searchInput');
             const filter = searchInput.value.toLowerCase();
             const clearBtn = document.getElementById('clearSearch');
 
-            // Show/Hide the "X" button in the search bar
             if (filter.length > 0) {
                 clearBtn.classList.remove('hidden');
             } else {
                 clearBtn.classList.add('hidden');
             }
 
-            // Filter the actual data array instead of the DOM rows
             filteredAssets = allAssets.filter(asset => {
                 const name = (asset.Name || '').toLowerCase();
                 const serial = (asset.SerialNo || '').toLowerCase();
@@ -300,42 +310,40 @@
                 const location = (asset.Location || '').toLowerCase();
                 const dept = (asset.Department || '').toLowerCase();
 
-                return name.includes(filter) || 
-                    serial.includes(filter) || 
-                    category.includes(filter) || 
-                    location.includes(filter) || 
-                    dept.includes(filter);
+                return name.includes(filter) || serial.includes(filter) || category.includes(filter) || 
+                       location.includes(filter) || dept.includes(filter);
             });
 
-            // Reset to page 1 and refresh the display
             displayPage(1);
-            
-            // Reset "Select All" checkbox
             const selectAllCheckbox = document.getElementById('selectAll');
             if (selectAllCheckbox) selectAllCheckbox.checked = false;
-            
-            updateDeleteButtonVisibility();
         }
 
+        // ONE unified listener for all setup
         document.addEventListener('DOMContentLoaded', () => {
-            // Search input
+            // Search logic
             document.getElementById('searchInput').addEventListener('input', filterAssets);
-
-            // Clear search button
             document.getElementById('clearSearch').addEventListener('click', () => {
-                const input = document.getElementById('searchInput');
-                input.value = '';
-                filterAssets(); // Refresh list
+                document.getElementById('searchInput').value = '';
+                filterAssets();
             });
 
-            // Select All (Only selects items on the CURRENT page)
+            // "Jump to" logic
+            const jumpInput = document.getElementById('jumpPageInput');
+            if (jumpInput) {
+                jumpInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') jumpToPage();
+                });
+            }
+
+            // Selection logic
             document.getElementById('selectAll').addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('.asset-checkbox');
-                checkboxes.forEach(cb => cb.checked = this.checked);
+                document.querySelectorAll('.asset-checkbox').forEach(cb => {
+                    cb.checked = this.checked;
+                });
                 updateDeleteButtonVisibility();
             });
 
-            // Listen for individual checkbox changes
             document.querySelector('tbody').addEventListener('change', (e) => {
                 if (e.target.classList.contains('asset-checkbox')) {
                     updateDeleteButtonVisibility();
@@ -343,55 +351,53 @@
             });
         });
 
-        //******* Delete function ******
+        function jumpToPage() {
+            const input = document.getElementById('jumpPageInput');
+            const pageNum = parseInt(input.value);
+            const totalPages = Math.ceil(filteredAssets.length / pageSize);
+
+            if (pageNum >= 1 && pageNum <= totalPages) {
+                displayPage(pageNum);
+                input.value = ''; 
+            } else {
+                alert(`Please enter a page number between 1 and ${totalPages}`);
+                input.value = '';
+            }
+        }
+
+        //**** DELETE FUNCTION ****//
         async function deleteSelectedAssets() {
             const tableBody = document.querySelector('tbody');
             const token = localStorage.getItem('token');
-            
-            // 1. Map checkboxes to an array of integers as required by API
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('input[type="checkbox"]:checked'));
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
             const idsToDelete = checkedBoxes.map(cb => parseInt(cb.value));
 
             if (idsToDelete.length === 0) return;
-
-            // 2. Safety Confirmation
-            if (!confirm(`Are you sure you want to permanently delete ${idsToDelete.length} asset(s)?`)) return;
+            if (!confirm(`Permanently delete ${idsToDelete.length} asset(s)?`)) return;
 
             try {
-                // 3. Update Button UI
                 const deleteBtn = document.getElementById('deleteAssetBtn');
-                const originalContent = deleteBtn.innerHTML;
-                deleteBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+                deleteBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Deleting...`;
                 deleteBtn.disabled = true;
 
-                // 4. API Request
                 const response = await fetch('http://172.28.192.16/asset/api/delete', {
                     method: 'POST', 
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ "ids": idsToDelete }) // Matches documentation format
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "ids": idsToDelete })
                 });
 
                 const result = await response.json();
-
                 if (result.status === 'success') {
-                    // Success feedback
-                    alert(`Success: ${result.message}`); 
-                    
-                    // 5. Refresh the UI
+                    alert('Deleted successfully');
                     document.getElementById('selectAll').checked = false;
-                    loadAssets(); // Reloads the table to show updated list
+                    loadAssets(); 
                 } else {
-                    alert('Error: ' + (result.message || 'Could not delete assets'));
-                    deleteBtn.innerHTML = originalContent;
-                    deleteBtn.disabled = false;
+                    alert('Error: ' + result.message);
+                    displayPage(currentPage); // Refresh current view
                 }
             } catch (error) {
-                console.error('Delete Error:', error);
-                alert('Connection error. Please check if the server is reachable.');
-                loadAssets(); // Reset table view
+                alert('Connection error.');
+                displayPage(currentPage);
             }
         }
 
