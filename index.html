@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Inventory - Dashboard</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,11 +19,12 @@
         tbody tr { min-height: 70px; transition: all 0.2s; }
         .main-content { flex: 1; padding: 2rem; }
         /* Adjust base font size for different resolutions */
-        html { font-size: 16px; /* Default */}
-        @media (max-width: 1536px) { html { font-size: 14px; } /* Automatically "zooms out" on smaller laptops */}
+        html { font-size: 15px; /* Default */}
+        @media (max-width: 1536px) { html { font-size: 13px; } /* Automatically "zooms out" on smaller laptops */}
         @media (min-width: 1920px) { html { font-size: 16px; } /* Keeps it crisp on large monitors */}
+        @media (max-width: 1440px) { body { zoom: 0.95; /* This forces a 5% zoom out only on smaller laptop screens */}} 
         /* Ensure the container doesn't feel too stretched on ultrawide screens */
-        .custom-container { max-width: 1600px; margin: 0 auto; width: 95%; /* Provides a consistent "margin" on all sides */}
+        .custom-container { max-width: 1550px; margin: 0 auto; width: 92%; /* Provides a consistent "margin" on all sides */}
         /* Add a pointer for the rows since they are now clickable */
         tbody tr {cursor: pointer;}
     </style>
@@ -67,7 +70,7 @@
                     <button class="flex-1 lg:flex-none bg-[#10b981] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
                         <i class="fas fa-file-import"></i> Import
                     </button>
-                    <button class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
+                    <button onclick="generateExcelReport(event)" class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
                         <i class="fas fa-file-excel"></i> Report
                     </button>
                     <button onclick="window.location.href='assetdetail.html'" class="flex-1 lg:flex-none bg-[#044BB4] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
@@ -404,6 +407,79 @@
         function updatePageSize() {
             pageSize = parseInt(document.getElementById('pageSizeSelect').value);
             displayPage(1);
+        }
+
+        //**** EXCEL REPORT GENERATION ****//
+        async function generateExcelReport() {
+            const reportBtn = event.currentTarget; // Captures the button clicked
+            const originalContent = reportBtn.innerHTML;
+            const tableBody = document.querySelector('tbody');
+            
+            // 1. Selection Logic
+            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
+            const selectedIds = checkedBoxes.map(cb => cb.value.toString());
+
+            let dataToExport = [];
+            if (selectedIds.length > 0) {
+                dataToExport = allAssets.filter(asset => selectedIds.includes(asset.id.toString()));
+            } else {
+                const confirmAll = confirm("No assets selected. Export the FULL inventory?");
+                if (!confirmAll) return;
+                dataToExport = allAssets; // Export everything in the master list
+            }
+
+            // 2. Show Loading State
+            reportBtn.disabled = true;
+            reportBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+
+            // 3. Process Excel (Wrapped in setTimeout so the spinner actually shows up)
+            setTimeout(() => {
+                try {
+                    const excelRows = dataToExport.map(asset => ({
+                        "Asset ID": asset.id || '',
+                        "Asset Name": asset.Name || '',
+                        "Category": asset.Category || '',
+                        "Brand": asset.Brand || '',
+                        "Model": asset.Model || '',
+                        "Serial Number": asset.SerialNo || '',
+                        "Department": asset.Department || '',
+                        "Location": asset.Location || '',
+                        "Staff Name": asset.StaffName || '',
+                        "Staff ID": asset.StaffID || '',
+                        "Operating System": asset.OS || '',
+                        "OS Version": asset.OS_Version || '',
+                        "IP Address": asset.IP_Address || '',
+                        "Functionality": asset.Functionality || '',
+                        "Sensitivity": asset.Sensitivity || '',
+                        "Memory Total (MB)": asset.Memory_Size || '',
+                        "Memory Used (MB)": asset.Memory_Used || '',
+                        "Memory Available (MB)": asset.Memory_Available || '',
+                        "Bandwidth": asset.Bandwidth || '',
+                        "Backup Location": asset.Backup_Location || '',
+                        "Description": asset.Description || ''
+                    }));
+
+                    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+                    
+                    // Auto-size columns
+                    const wscols = Object.keys(excelRows[0] || {}).map(key => ({ wch: key.length + 15 }));
+                    worksheet['!cols'] = wscols;
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Full Asset Report");
+
+                    const date = new Date().toISOString().split('T')[0];
+                    XLSX.writeFile(workbook, `Asset_Inventory_Detailed_${date}.xlsx`);
+
+                } catch (error) {
+                    console.error("Excel Error:", error);
+                    alert("Failed to generate report.");
+                } finally {
+                    // 4. Restore Button State
+                    reportBtn.disabled = false;
+                    reportBtn.innerHTML = originalContent;
+                }
+            }, 100); // 100ms delay is enough for the UI to update
         }
         
         function editAsset(id) { 
