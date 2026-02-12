@@ -20,7 +20,7 @@
         .main-content { flex: 1; padding: 2rem; }
         /* Adjust base font size for different resolutions */
         html { font-size: 15px; /* Default */}
-        @media (max-width: 1536px) { html { font-size: 13px; } /* Automatically "zooms out" on smaller laptops */}
+        @media (max-width: 1536px) { html { font-size: 14px; } /* Automatically "zooms out" on smaller laptops */}
         @media (min-width: 1920px) { html { font-size: 16px; } /* Keeps it crisp on large monitors */}
         @media (max-width: 1440px) { body { zoom: 0.95; /* This forces a 5% zoom out only on smaller laptop screens */}} 
         /* Ensure the container doesn't feel too stretched on ultrawide screens */
@@ -67,9 +67,30 @@
                     <button id="deleteAssetBtn" onclick="deleteSelectedAssets()" class="hidden flex-1 lg:flex-none bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 shadow-lg shadow-red-200 transition-all">
                         <i class="fas fa-trash-alt"></i> <span>Delete</span>
                     </button>
-                    <button class="flex-1 lg:flex-none bg-[#10b981] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
-                        <i class="fas fa-file-import"></i> Import
-                    </button>
+
+                    <div class="relative inline-flex flex-1 lg:flex-none">
+                        <input type="file" id="importInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileImport(event)">
+                        
+                        <button onclick="document.getElementById('importInput').click()" 
+                            class="flex-1 bg-[#10b981] text-white px-5 py-3 rounded-l-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all border-r border-green-500/30">
+                            <i class="fas fa-file-import"></i> Import
+                        </button>
+                        
+                        <button onclick="toggleImportDropdown(event)" 
+                            class="bg-[#10b981] text-white px-3 py-3 rounded-r-xl hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div id="importDropdown" class="hidden absolute right-0 mt-14 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-[60]">
+                            <div class="py-2">
+                                <div class="px-4 py-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest border-b border-gray-50 mb-1">Options</div>
+                                <a href="javascript:void(0)" onclick="downloadImportTemplate()" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-download text-blue-500 w-4"></i>
+                                    <span class="font-medium">Download Template</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <button onclick="generateExcelReport(event)" class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
                         <i class="fas fa-file-excel"></i> Report
                     </button>
@@ -89,7 +110,10 @@
                             <th class="p-5">Serial No</th>
                             <th class="p-5">Location</th>
                             <th class="p-5">Department</th>
-                            <th class="p-5">Created Date</th>
+                            <th onclick="toggleSort('Created_Date')" class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-50 transition-colors">
+                                Created Date 
+                                <span id="sortIcon"><i class="fas fa-sort ml-1 text-slate-300"></i></span>
+                            </th>
                             <th class="p-5 text-center">Actions</th>
                         </tr>
                     </thead>
@@ -185,9 +209,17 @@
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
-                    allAssets = result.data; // Store the full list
-                    filteredAssets = [...allAssets]; // Default filtered list is the full list
-                    displayPage(1); // Show the first page
+                    allAssets = result.data; 
+
+                    // --- ADD THIS SORTING LOGIC HERE ---
+                    // Sort by CreatedDate descending (Newest First)
+                    allAssets.sort((a, b) => {
+                        return new Date(b.CreatedDate) - new Date(a.CreatedDate);
+                    });
+                    // ------------------------------------
+
+                    filteredAssets = [...allAssets]; 
+                    displayPage(1); 
                 } else {
                     tableBody.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-red-400">Unable to retrieve data.</td></tr>`;
                 }
@@ -237,6 +269,30 @@
             updateFooterStatus(filteredAssets.length === 0 ? 0 : start + 1, Math.min(end, filteredAssets.length), filteredAssets.length);
             renderPaginationControls();
             updateDeleteButtonVisibility(); // Ensure delete button hides/shows correctly on page change
+        }
+
+        //**** ToggleSort For the Created Date column ***
+        let sortOrder = 'desc'; // Default to newest first
+
+        function toggleSort(column) {
+            // 1. Toggle the order state
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            
+            // 2. Update UI Icon
+            const icon = sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+            document.getElementById('sortIcon').innerHTML = `<i class="fas ${icon} ml-1 text-blue-600"></i>`;
+            
+            // 3. Sort the filteredAssets array (so search results stay sorted too)
+            filteredAssets.sort((a, b) => {
+                // Ensure we use the correct key: CreatedDate
+                const dateA = new Date(a.CreatedDate || 0);
+                const dateB = new Date(b.CreatedDate || 0);
+                
+                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+            
+            // 4. Reset to page 1 and refresh the view
+            displayPage(1);
         }
 
         function updateFooterStatus(start, end, total) {
@@ -306,6 +362,7 @@
                 clearBtn.classList.add('hidden');
             }
 
+            // Filter the master list
             filteredAssets = allAssets.filter(asset => {
                 const name = (asset.Name || '').toLowerCase();
                 const serial = (asset.SerialNo || '').toLowerCase();
@@ -314,7 +371,14 @@
                 const dept = (asset.Department || '').toLowerCase();
 
                 return name.includes(filter) || serial.includes(filter) || category.includes(filter) || 
-                       location.includes(filter) || dept.includes(filter);
+                    location.includes(filter) || dept.includes(filter);
+            });
+
+            // RE-APPLY SORTING to the filtered results
+            filteredAssets.sort((a, b) => {
+                const dateA = new Date(a.CreatedDate || 0);
+                const dateB = new Date(b.CreatedDate || 0);
+                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
             });
 
             displayPage(1);
@@ -366,6 +430,136 @@
                 alert(`Please enter a page number between 1 and ${totalPages}`);
                 input.value = '';
             }
+        }
+
+        //*********IMPORT BUTTON WITH TEMPLATE VALIDATION*******
+        async function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // 1. Extract Headers for validation
+                    // Get range of sheet, then get first row only
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    const uploadedHeaders = [];
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })];
+                        if (cell) uploadedHeaders.push(cell.v);
+                    }
+
+                    // 2. Define Required Template Headers
+                    const requiredHeaders = [
+                        "Name", "Category", "SerialNo", "Brand", "Model", 
+                        "Department", "Location", "StaffName", "StaffID"
+                    ];
+
+                    // 3. Validate: Check if all required headers exist in the upload
+                    const isValid = requiredHeaders.every(header => uploadedHeaders.includes(header));
+
+                    if (!isValid) {
+                        alert("❌ Incorrect Template Error!\n\nThe uploaded file does not match the required format. Please use the official template.");
+                        event.target.value = ''; // Reset
+                        return;
+                    }
+
+                    // 4. Convert to JSON if valid
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) {
+                        alert("The file appears to be empty.");
+                        return;
+                    }
+
+                    if (confirm(`Template Validated! ✅\nDetected ${jsonData.length} assets. Proceed with import?`)) {
+                        await uploadImportedAssets(jsonData);
+                    }
+                } catch (error) {
+                    console.error("Import Error:", error);
+                    alert("Failed to read the Excel file. Ensure it is a valid .xlsx or .xls file.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // Toggle the Import Dropdown visibility
+        function toggleImportDropdown(event) {
+            event.stopPropagation();
+            const importDropdown = document.getElementById('importDropdown');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            // Close user dropdown if open
+            if (userDropdown) userDropdown.classList.add('hidden');
+            
+            importDropdown.classList.toggle('hidden');
+        }
+
+        // Add this to your existing window.onclick or create a new one to close dropdowns
+        window.addEventListener('click', () => {
+            const importDropdown = document.getElementById('importDropdown');
+            if (importDropdown) importDropdown.classList.add('hidden');
+        });
+
+        async function uploadImportedAssets(assets) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://172.28.192.16/asset/api/insert', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({ "assets": assets })
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('Import Successful!');
+                    loadAssets(); // Refresh the table
+                } else {
+                    alert('Import failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Network error during import.');
+            }   
+        }
+
+        function downloadImportTemplate() {
+            const templateData = [{
+                "Name": "Example Laptop",
+                "Category": "Workstation",
+                "SerialNo": "SN123456",
+                "Brand": "Dell",
+                "Model": "Latitude 5420",
+                "Department": "IT",
+                "Location": "Head Office",
+                "StaffName": "John Doe",
+                "StaffID": 1234,
+                "IP_Address": "192.168.1.1",
+                "OS": "Windows 11",
+                "OS_Version": "22H2",
+                "Memory_Size": "16GB",
+                "Memory_Used": "4GB",
+                "Memory_Available": "12GB",
+                "Bandwidth": "",
+                "Description": "New hire laptop",
+                "Functionality": "Functional",
+                "Sensitivity": "Internal",
+                "Backup_Location": "Cloud"
+            }];
+
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Import Template");
+            XLSX.writeFile(workbook, "Asset_Import_Template.xlsx");
         }
 
         //**** DELETE FUNCTION ****//

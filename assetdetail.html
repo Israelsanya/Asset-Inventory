@@ -4,26 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Detail | Inventory Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="images/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        
-        /* SECTION TITLES: Styled as modern labels with a line divider */
         .section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #2563eb; display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
-        
-        /* INPUT STYLING: Standardized rounded inputs */
         .form-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #64748b; margin-bottom: 0.5rem; }
         .form-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.9375rem; transition: all 0.2s; outline: none; }
         .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
-        
-        /* DETAIL MODE CSS: When body has .mode-detail, inputs transform into read-only labels */
         .mode-detail .form-input { border-color: transparent !important; background: transparent !important; padding-left: 0 !important; color: #1e293b !important; pointer-events: none; font-weight: 600; appearance: none; }
+        .mode-detail .form-input::placeholder { color: transparent !important; }
         .mode-detail .required-star, .mode-detail .hint, .mode-detail .select-arrow { display: none; }
-        .mode-detail .section-title::after { background: #cbd5e1; }
+        .mode-detail select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none !important; }
+        .mode-detail textarea.form-input { resize: none; padding-top: 0 !important; }
     </style>
 </head>
 <body class="mode-create" id="pageBody">
@@ -83,8 +79,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Serial Number <span class="text-red-500 required-star">*</span></label>
-                                <input type="text" id="serialNo" required class="form-input" placeholder="SN-XXXX-XXXX">
+                                <label>Serial Number</label>
+                                <input type="text" id="serialNo" class="form-input" placeholder="SN-XXXX-XXXX">
                             </div>
                             <div class="form-group">
                                 <label>Brand</label>
@@ -129,28 +125,16 @@
                         <div id="memoryGroup" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="form-group">
                                 <label>Memory Size</label>
-                                <div class="flex items-center">
-                                    <input type="text" id="memSize" class="form-input !rounded-r-none border-r-0" placeholder="0">
-                                    <select id="memUnit" class="form-input !w-24 !rounded-l-none bg-slate-50 border-l-0 select-arrow">
-                                        <option value="GB">GB</option>
-                                        <option value="TB">TB</option>
-                                    </select>
-                                </div>
+                                <input type="text" id="memSize" class="form-input" placeholder="e.g. 32GB">
                             </div>
-                            <div class="form-group"><label>Memory Used</label><input type="text" id="memUsed" class="form-input"></div>
-                            <div class="form-group"><label>Memory Available</label><input type="text" id="memAvail" class="form-input"></div>
+                            <div class="form-group"><label>Memory Used</label><input type="text" id="memUsed" class="form-input" placeholder="e.g. 8GB"></div>
+                            <div class="form-group"><label>Memory Available</label><input type="text" id="memAvail" class="form-input" placeholder="e.g. 24GB"></div>
                         </div>
 
                         <div id="bandwidthGroup" class="hidden">
                             <div class="form-group max-w-xs">
                                 <label>Bandwidth</label>
-                                <div class="flex items-center">
-                                    <input type="text" id="bandwidth" class="form-input !rounded-r-none border-r-0" placeholder="0">
-                                    <select id="bandUnit" class="form-input !w-28 !rounded-l-none bg-slate-50 border-l-0 select-arrow">
-                                        <option value="Mbps">Mbps</option>
-                                        <option value="Gbps">Gbps</option>
-                                    </select>
-                                </div>
+                                <input type="text" id="bandwidth" class="form-input" placeholder="e.g. 100Mbps">
                             </div>
                         </div>
                     </section>
@@ -170,28 +154,14 @@
                         </div>
                     </section>
 
-                    <section>
-                        <div class="section-title">06 Status & Attachments</div>
-                        <div class="space-y-6">
-                            <div class="form-group">
-                                <label>Attachments</label>
-                                <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer">
-                                    <i class="fas fa-cloud-upload-alt text-blue-600 text-2xl mb-4"></i>
-                                    <p class="text-sm font-semibold text-slate-700">Drag and drop files here</p>
-                                    <input type="file" id="fileInput" class="hidden">
-                                </div>
-                            </div>
-
-                            <div id="formControls" class="pt-6 space-y-3">
-                                <button type="submit" id="primaryBtn" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">
-                                    Create Asset
-                                </button>
-                                <button type="button" onclick="cancelMode()" class="w-full text-slate-400 py-3 font-semibold hover:text-slate-600 transition-colors">
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </section>
+                    <div id="formControls" class="pt-6 space-y-3">
+                        <button type="submit" id="primaryBtn" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">
+                            Create Asset
+                        </button>
+                        <button type="button" onclick="cancelMode()" class="w-full text-slate-400 py-3 font-semibold hover:text-slate-600 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
                 </form>
             </div>
         </main>
@@ -200,19 +170,17 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const assetId = urlParams.get('id');
-        const requestedMode = urlParams.get('mode'); // Captures "edit" from the URL
+        const requestedMode = urlParams.get('mode');
         const token = localStorage.getItem('token');
         let currentMode = 'create';
+        let isDirty = false;
 
         window.onload = async () => {
             if (assetId) {
                 document.getElementById('navTitle').innerText = "Loading Asset...";
                 await loadAssetDetail(assetId);
-                
-                // NEW: If the URL has mode=edit, force the UI into Edit Mode immediately
                 if (requestedMode === 'edit') {
-                    const assetName = document.getElementById('assetName').value;
-                    setMode('edit', assetName);
+                    setMode('edit', document.getElementById('assetName').value);
                 }
             } else {
                 setMode('create');
@@ -230,7 +198,6 @@
                     const data = result.data.find(a => String(a.id) === String(id));
                     if (!data) return alert("Asset not found");
 
-                    // 1. Basic Mapping
                     document.getElementById('assetName').value = data.Name || '';
                     document.getElementById('category').value = data.Category || '';
                     document.getElementById('serialNo').value = data.SerialNo || '';
@@ -247,33 +214,20 @@
                     document.getElementById('functionality').value = data.Functionality || '';
                     document.getElementById('sensitivity').value = data.Sensitivity || '';
                     document.getElementById('backupLoc').value = data.Backup_Location || '';
-                    
-                    // 2. Memory Size Logic (Splitting "16GB" into Value + Unit)
-                    if (data.Memory_Size) {
-                        const memVal = parseInt(data.Memory_Size);
-                        const memUnit = data.Memory_Size.replace(/[0-9]/g, '').trim();
-                        document.getElementById('memSize').value = memVal || '';
-                        if (memUnit) document.getElementById('memUnit').value = memUnit;
-                    }
+
+                    // WITH THESE LINES:
+                    document.getElementById('memSize').value = data.Memory_Size || '';
+                    document.getElementById('bandwidth').value = data.Bandwidth || '';
+
+                    // Used and Available are now direct strings
                     document.getElementById('memUsed').value = data.Memory_Used || '';
                     document.getElementById('memAvail').value = data.Memory_Available || '';
 
-                    // 3. Bandwidth Logic (Splitting "1Gbps" into Value + Unit)
-                    if (data.Bandwidth) {
-                        const bandVal = parseInt(data.Bandwidth);
-                        const bandUnit = data.Bandwidth.replace(/[0-9]/g, '').trim();
-                        document.getElementById('bandwidth').value = bandVal || '';
-                        if (bandUnit) document.getElementById('bandUnit').value = bandUnit;
-                    }
-
                     toggleCapacityFields(data.Category);
-                    
-                    // Default to detail mode unless we specifically requested 'edit' in onload
                     setMode('detail', data.Name);
                 }
-            } catch (err) { 
-                console.error("Error:", err); 
-                document.getElementById('navTitle').innerText = "Error Loading Asset";
+            } catch (err) {
+                console.error("Error:", err);
             }
         }
 
@@ -281,7 +235,6 @@
             const section = document.getElementById('capacitySection');
             const memGroup = document.getElementById('memoryGroup');
             const bandGroup = document.getElementById('bandwidthGroup');
-
             section.classList.add('hidden');
             memGroup.classList.add('hidden');
             bandGroup.classList.add('hidden');
@@ -295,35 +248,15 @@
             }
         }
 
-        
-        // *** NEW CODE BELOW TO HANDLE UNSAVED CHANGES WARNING ***
-        let isDirty = false; // Flag to track if the form has been modified
-
-        // Attach change listeners to the form
-        document.getElementById('assetForm').addEventListener('input', () => {
-            if (currentMode === 'edit' || currentMode === 'create') {
-                isDirty = true;
-            }
-        });
-
-        // This handles the browser "Back" button, refreshing, or closing the tab
-        window.onbeforeunload = function() {
-            if (isDirty) {
-                return "You have unsaved changes. Are you sure you want to leave?";
-            }
-        };
-
-        // Update setMode to reset the "Dirty" status when switching modes
         function setMode(mode, assetName = "") {
             currentMode = mode;
-            isDirty = false; // Reset tracking when we switch modes successfully
-            
+            isDirty = false;
             const body = document.getElementById('pageBody');
             const actionBar = document.getElementById('actionBar');
             const formControls = document.getElementById('formControls');
             const breadcrumb = document.getElementById('breadcrumbCurrent');
             
-            body.className = `mode-${mode} lg:ml-0 flex flex-col`;
+            body.className = `mode-${mode}`;
 
             if (mode === 'detail') {
                 document.getElementById('navTitle').innerText = `Asset: ${assetName}`;
@@ -339,41 +272,91 @@
             }
         }
 
-        // Placeholder for your future Save logic
-        async function handleSave() {
-            // ... logic to send data to API ...
-            
-            isDirty = false; // Mark as clean so we can navigate away
-            // window.location.href = 'index.html';
-        }
-        
-        function cancelMode() {
-            // If we've made changes, we should still double-check before discarding
-            if (isDirty) {
-                if (!confirm("Discard unsaved changes?")) {
-                    return; // Stay in Edit mode
-                }
-            }
+        document.getElementById('assetForm').addEventListener('input', () => isDirty = true);
 
-            // THE TRANSITION:
+        window.onbeforeunload = () => isDirty ? "Unsaved changes!" : null;
+
+        function cancelMode() {
+            if (isDirty && !confirm("Discard changes?")) return;
             if (assetId && currentMode === 'edit') {
-                // Just flip the UI back to Detail mode
-                const assetName = document.getElementById('assetName').value;
-                setMode('detail', assetName);
+                setMode('detail', document.getElementById('assetName').value);
             } else {
-                // If we are in 'Create' mode, we have to go back to the list
-                isDirty = false; // Reset flag so browser doesn't block us
+                isDirty = false;
                 window.location.href = 'index.html';
             }
         }
 
-        function confirmDelete() {
-            if(confirm("Permanently delete this asset?")) {
-                fetch(`http://172.28.192.16/asset/api/delete_asset?id=${assetId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(() => window.location.href = 'index.html');
+        document.getElementById('assetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('primaryBtn');
+            const originalText = submitBtn.innerHTML;
+
+            // Combine inputs into single strings for storage            
+            const memStr = document.getElementById('memSize').value || "";
+            const bandStr = document.getElementById('bandwidth').value || "";
+
+            const baseData = {
+                "Name": document.getElementById('assetName').value,
+                "Category": document.getElementById('category').value,
+                "SerialNo": document.getElementById('serialNo').value || "",
+                "Brand": document.getElementById('brand').value || "",
+                "Model": document.getElementById('model').value || "",
+                "StaffName": document.getElementById('staffName').value || "",
+                "StaffID": parseInt(document.getElementById('staffId').value) || 0,
+                "Department": document.getElementById('department').value || "IT",
+                "Location": document.getElementById('location').value || "",
+                "IP_Address": document.getElementById('ipAddress').value || "",
+                "OS": document.getElementById('os').value || "",
+                "OS_Version": document.getElementById('osVersion').value || "",
+                "Memory_Size": memStr,
+                "Memory_Used": document.getElementById('memUsed').value || "", // String
+                "Memory_Available": document.getElementById('memAvail').value || "", // String
+                "Bandwidth": bandStr,
+                "Description": document.getElementById('description').value || "",
+                "Functionality": document.getElementById('functionality').value || "",
+                "Sensitivity": document.getElementById('sensitivity').value || "Internal",
+                "Backup_Location": document.getElementById('backupLoc').value || ""
+            };
+
+            const apiUrl = currentMode === 'create' ? 'http://172.28.192.16/asset/api/insert' : 'http://172.28.192.16/asset/api/update';
+            const payload = currentMode === 'create' ? { "assets": [baseData] } : { ...baseData, "id": parseInt(assetId) };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Saving...';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    isDirty = false;
+                    alert("Success!");
+                    currentMode === 'edit' ? setMode('detail', baseData.Name) : window.location.href = 'index.html';
+                }
+            } catch (err) {
+                alert("Connection failed.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
+        });
+
+        async function confirmDelete() {
+            if (!confirm("Permanently delete?")) return;
+            try {
+                const response = await fetch('http://172.28.192.16/asset/api/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ "ids": [parseInt(assetId)] })
+                });
+                if ((await response.json()).status === "success") {
+                    isDirty = false;
+                    window.location.href = 'index.html';
+                }
+            } catch (err) { alert("Delete failed."); }
         }
     </script>
 </body>
