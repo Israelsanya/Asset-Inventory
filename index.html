@@ -10,23 +10,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; }
-        /* Increased max-width to 1700px for a more expansive feel like Image 1 */
-        .custom-container { max-width: 1700px; margin: 0 auto; width: 100%; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Unified Container: Responsive width that scales beautifully */
+        .custom-container { max-width: 1600px; margin: 0 auto; width: 95%; overflow: visible; }
         .custom-shadow { box-shadow: 0px 10px 25px rgba(13, 10, 44, 0.04); }
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; background: white; border-radius: 12px; }
-        /* Ensuring rows have enough height to prevent the "squished" look */
-        tbody tr { min-height: 70px; transition: all 0.2s; }
-        .main-content { flex: 1; padding: 2rem; }
-        /* Adjust base font size for different resolutions */
-        html { font-size: 15px; /* Default */}
-        @media (max-width: 1536px) { html { font-size: 14px; } /* Automatically "zooms out" on smaller laptops */}
-        @media (min-width: 1920px) { html { font-size: 16px; } /* Keeps it crisp on large monitors */}
-        @media (max-width: 1440px) { body { zoom: 0.95; /* This forces a 5% zoom out only on smaller laptop screens */}} 
-        /* Ensure the container doesn't feel too stretched on ultrawide screens */
-        .custom-container { max-width: 1550px; margin: 0 auto; width: 92%; /* Provides a consistent "margin" on all sides */}
-        /* Add a pointer for the rows since they are now clickable */
-        tbody tr {cursor: pointer;}
+        .table-wrapper { overflow-x: auto; background: white; border-radius: 12px; }
+
+        /* The Fix: Remove fixed 70px height. Use vertical padding instead. */
+        tbody tr { cursor: pointer; transition: all 0.2s; }
+
+        /* This gives the "expansive" feel without forcing a huge height on small screens */
+        tbody td { padding: 1.25rem 1.25rem !important; }
+        .main-content { flex: 1; padding: 1.5rem 0; }
+
+        /* Fluid Typography: The real secret to fixing the "zoom" issue */
+        html { font-size: 14px; } /* Default for standard laptops */
+        @media (min-width: 1536px) { 
+            html { font-size: 15px; } /* Slightly larger for Pro laptops */
+        }
+        @media (min-width: 1920px) { 
+            html { font-size: 16px; } /* Full size for large monitors */
+            .custom-container { max-width: 1700px; } 
+        }
+
+        /* Dropdown Logic */
+        .bg-white.rounded-2xl { overflow: visible; }
+        #importDropdown:not(.hidden) { display: block; animation: fadeIn 0.2s ease-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc]">
@@ -34,69 +49,73 @@
     <div class="custom-container main-content">
         <div class="bg-white rounded-2xl p-8 custom-shadow">
             
-            <div class="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
-                <div class="flex items-center gap-4 w-full lg:w-auto relative">
-                    <div class="relative group">
-                        <img src="images/FirstbankIcon.png" alt="User Menu" id="userMenuBtn"
-                            class="w-12 h-12 object-contain cursor-pointer hover:scale-105 transition-transform">
-                        
-                        <div id="userDropdown" class="hidden absolute left-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50">
-                            <div class="py-2">
-                                <div class="px-4 py-3 text-xs text-gray-400 uppercase font-bold tracking-widest">User Options</div>
-                                <hr class="border-gray-50">
-                                <a href="javascript:void(0)" onclick="handleLogout()" class="flex items-center gap-3 px-4 py-4 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span class="font-semibold">Logout</span>
-                                </a>
+            <div class="mb-10">
+    
+                <div class="flex justify-end mb-4">
+                    <div class="relative">
+                        <button onclick="toggleUserDropdown(event)" 
+                            class="flex items-center gap-3 p-1 hover:bg-gray-100 rounded-full transition-all group">
+                            <span id="displayUserName" class="text-xs font-bold text-slate-500 hidden sm:block px-1">Admin User</span>
+                            <div class="w-10 h-10 bg-white text-slate-400 rounded-full flex items-center justify-center border border-gray-200 group-hover:border-blue-500 group-hover:text-blue-500 transition-all shadow-sm">
+                                <i class="fas fa-user-circle text-xl"></i>
                             </div>
-                        </div>
-                    </div>
-                    <h1 class="text-[#1e293b] text-2xl font-bold tracking-tight">Asset Inventory</h1>
-                </div>
-                
-                <div class="relative w-full lg:max-w-xl">
-                    <input type="text" id="searchInput" placeholder="Search by name, serial, or category..." 
-                        class="w-full pl-6 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm transition-all">
-                    <button id="clearSearch" class="hidden absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times-circle"></i>
-                    </button>
-                    <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <button id="deleteAssetBtn" onclick="deleteSelectedAssets()" class="hidden flex-1 lg:flex-none bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 shadow-lg shadow-red-200 transition-all">
-                        <i class="fas fa-trash-alt"></i> <span>Delete</span>
-                    </button>
-
-                    <div class="relative inline-flex flex-1 lg:flex-none">
-                        <input type="file" id="importInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileImport(event)">
-                        
-                        <button onclick="document.getElementById('importInput').click()" 
-                            class="flex-1 bg-[#10b981] text-white px-5 py-3 rounded-l-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg shadow-green-100 transition-all border-r border-green-500/30">
-                            <i class="fas fa-file-import"></i> Import
-                        </button>
-                        
-                        <button onclick="toggleImportDropdown(event)" 
-                            class="bg-[#10b981] text-white px-3 py-3 rounded-r-xl hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
-                            <i class="fas fa-chevron-down text-xs"></i>
                         </button>
 
-                        <div id="importDropdown" class="hidden absolute right-0 mt-14 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-[60]">
-                            <div class="py-2">
-                                <div class="px-4 py-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest border-b border-gray-50 mb-1">Options</div>
-                                <a href="javascript:void(0)" onclick="downloadImportTemplate()" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors">
-                                    <i class="fas fa-download text-blue-500 w-4"></i>
-                                    <span class="font-medium">Download Template</span>
-                                </a>
-                            </div>
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 z-[70]">
+                            <a href="javascript:void(0)" onclick="handleLogout()" class="flex items-center gap-3 px-4 py-4 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span class="font-bold">Logout</span>
+                            </a>
                         </div>
                     </div>
-                    <button onclick="generateExcelReport(event)" class="flex-1 lg:flex-none bg-[#f59e0b] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
-                        <i class="fas fa-file-excel"></i> Report
-                    </button>
-                    <button onclick="window.location.href='assetdetail.html'" class="flex-1 lg:flex-none bg-[#044BB4] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                        <i class="fas fa-plus"></i> New Asset
-                    </button>
+                </div>
+
+                <div class="flex flex-col lg:flex-row justify-between items-center gap-6">
+                    
+                    <div class="flex items-center gap-4 w-full lg:w-auto">
+                        <img src="images/FirstbankIcon.png" alt="Logo" class="w-12 h-12 object-contain">
+                        <h1 class="text-[#1e293b] text-2xl font-bold tracking-tight">Asset Inventory</h1>
+                    </div>
+                    
+                    <div class="relative w-full lg:max-w-md xl:max-w-xl">
+                        <input type="text" id="searchInput" placeholder="Search by name, serial, or category..." 
+                            class="w-full pl-6 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm transition-all">
+                        <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                        <button id="deleteAssetBtn" onclick="deleteSelectedAssets()" class="hidden bg-red-500 text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-600 shadow-lg shadow-red-100 transition-all">
+                            <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                        </button>
+
+                        <div class="relative inline-flex">
+                            <input type="file" id="importInput" class="hidden" onchange="handleFileImport(event)">
+                            <button onclick="document.getElementById('importInput').click()" class="bg-[#10b981] text-white px-5 py-3 rounded-l-xl text-sm font-bold border-r border-green-500/30 hover:bg-green-600 transition-all">
+                                <i class="fas fa-file-import"></i> Import
+                            </button>
+                            <button onclick="toggleImportDropdown(event)" class="bg-[#10b981] text-white px-3 py-3 rounded-r-xl hover:bg-green-600 transition-all">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+
+                            <div id="importDropdown" class="hidden absolute right-0 mt-14 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-[60]">
+                                <div class="p-2 space-y-1">
+                                    <button onclick="downloadImportTemplate()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                                        <i class="fas fa-download text-blue-500"></i>
+                                        <span class="font-semibold">Download Template</span>
+                                    </button>
+                                    <hr class="border-gray-50 my-1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="generateExcelReport(event)" class="bg-[#f59e0b] text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all">
+                            <i class="fas fa-file-excel"></i> Report
+                        </button>
+                        
+                        <button onclick="window.location.href='assetdetail.html'" class="bg-[#044BB4] text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+                            <i class="fas fa-plus"></i> New Asset
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -157,34 +176,14 @@
     </div>
 
     <script>
-        // Keep your existing script logic exactly as it was
-        let totalAssetCount = 0;
-        let visibleAssetCount = 0;
-        let allAssets = [];       // Will hold the full list from the API
-        let filteredAssets = [];  // Will hold search results
+        // --- 1. GLOBAL STATE ---
+        let allAssets = [];       // Full list from API
+        let filteredAssets = [];  // Search/Filter results
         let currentPage = 1;
         let pageSize = 20;
+        let sortOrder = 'desc';   // Default to newest first
 
-        const menuBtn = document.getElementById('userMenuBtn');
-        const dropdown = document.getElementById('userDropdown');
-
-        if (menuBtn) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
-        }
-
-        window.addEventListener('click', () => {
-            if (dropdown) dropdown.classList.add('hidden');
-        });
-
-        function handleLogout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-
+        // --- 2. INITIALIZATION & AUTH ---
         window.onload = function() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -192,8 +191,17 @@
             } else {
                 loadAssets();
             }
+        };
+
+        // --- UPDATED LOGOUT FUNCTION ---
+        function handleLogout() {
+            // Clear everything so the next user doesn't see old data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
         }
 
+        // --- 3. DATA LOADING ---
         async function loadAssets() {
             const tableBody = document.querySelector('tbody');
             const token = localStorage.getItem('token');
@@ -211,12 +219,8 @@
                 if (result.status === 'success' && result.data) {
                     allAssets = result.data; 
 
-                    // --- ADD THIS SORTING LOGIC HERE ---
-                    // Sort by CreatedDate descending (Newest First)
-                    allAssets.sort((a, b) => {
-                        return new Date(b.CreatedDate) - new Date(a.CreatedDate);
-                    });
-                    // ------------------------------------
+                    // Default Sort: Newest First
+                    allAssets.sort((a, b) => new Date(b.CreatedDate || 0) - new Date(a.CreatedDate || 0));
 
                     filteredAssets = [...allAssets]; 
                     displayPage(1); 
@@ -228,7 +232,7 @@
             }
         }
 
-        //*****This is the Display Page and Render Pagination which slice of the array to show based on the page number.
+        // --- 4. RENDERING & PAGINATION ---
         function displayPage(page) {
             currentPage = page;
             const tableBody = document.querySelector('tbody');
@@ -245,7 +249,7 @@
                     const row = `
                         <tr class="hover:bg-blue-50/40 cursor-pointer transition-all" 
                             ondblclick="window.location.href='assetdetail.html?id=${asset.id}'">
-                            <td class="p-5 text-center" ondblclick="event.stopPropagation()">
+                            <td class="p-5 text-center" onclick="event.stopPropagation()">
                                 <input type="checkbox" value="${asset.id}" class="asset-checkbox w-4 h-4 rounded accent-blue-600">
                             </td>
                             <td class="p-5 font-semibold text-slate-700">
@@ -256,7 +260,7 @@
                             <td class="p-5 text-slate-500">${asset.Location || 'N/A'}</td>
                             <td class="p-5 text-slate-500">${asset.Department || 'N/A'}</td>
                             <td class="p-5 text-slate-400 text-xs">${asset.CreatedDate || 'N/A'}</td>
-                            <td class="p-5 text-center" ondblclick="event.stopPropagation()">
+                            <td class="p-5 text-center" onclick="event.stopPropagation()">
                                 <a href="assetdetail.html?id=${asset.id}&mode=edit" class="inline-block text-blue-500 hover:text-blue-700 p-3 bg-blue-50 rounded-xl transition-all">
                                     <i class="fas fa-edit"></i>
                                 </a>
@@ -268,155 +272,35 @@
 
             updateFooterStatus(filteredAssets.length === 0 ? 0 : start + 1, Math.min(end, filteredAssets.length), filteredAssets.length);
             renderPaginationControls();
-            updateDeleteButtonVisibility(); // Ensure delete button hides/shows correctly on page change
-        }
-
-        //**** ToggleSort For the Created Date column ***
-        let sortOrder = 'desc'; // Default to newest first
-
-        function toggleSort(column) {
-            // 1. Toggle the order state
-            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-            
-            // 2. Update UI Icon
-            const icon = sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
-            document.getElementById('sortIcon').innerHTML = `<i class="fas ${icon} ml-1 text-blue-600"></i>`;
-            
-            // 3. Sort the filteredAssets array (so search results stay sorted too)
-            filteredAssets.sort((a, b) => {
-                // Ensure we use the correct key: CreatedDate
-                const dateA = new Date(a.CreatedDate || 0);
-                const dateB = new Date(b.CreatedDate || 0);
-                
-                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-            });
-            
-            // 4. Reset to page 1 and refresh the view
-            displayPage(1);
-        }
-
-        function updateFooterStatus(start, end, total) {
-            const footerStatus = document.getElementById('footerStatus');
-            if (total === 0) {
-                footerStatus.innerText = "No assets found";
-            } else {
-                footerStatus.innerText = `Showing ${start} - ${end} of ${total} assets`;
-            }
+            updateDeleteButtonVisibility();
         }
 
         function renderPaginationControls() {
             const container = document.querySelector('.flex.items-center.gap-1');
+            if (!container) return;
+
             const totalPages = Math.ceil(filteredAssets.length / pageSize);
             const jumpInput = document.getElementById('jumpPageInput');
             if (jumpInput) jumpInput.max = totalPages;
-            let html = '';
 
-            // Previous Button
+            let html = '';
+            // Previous
             html += `<button onclick="displayPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"><i class="fas fa-chevron-left text-xs"></i></button>`;
 
-            // Page numbers
             for (let i = 1; i <= totalPages; i++) {
                 if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    const activeClass = i === currentPage ? 'bg-[#044BB4] text-white shadow-lg shadow-blue-100' : 'border border-gray-200 hover:bg-white';
+                    const activeClass = i === currentPage ? 'bg-[#044BB4] text-white shadow-lg' : 'border border-gray-200 hover:bg-white';
                     html += `<button onclick="displayPage(${i})" class="w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${activeClass}">${i}</button>`;
                 } else if (i === currentPage - 2 || i === currentPage + 2) {
                     html += `<span class="px-1 text-gray-400">...</span>`;
                 }
             }
 
-            // Next Button
+            // Next
             html += `<button onclick="displayPage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"><i class="fas fa-chevron-right text-xs"></i></button>`;
 
             container.innerHTML = html;
         }
-
-        function updateDeleteButtonVisibility() {
-            const tableBody = document.querySelector('tbody');
-            const deleteBtn = document.getElementById('deleteAssetBtn');
-            const footerStatus = document.getElementById('footerStatus');
-            
-            // Count checked boxes on the current page
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
-            const count = checkedBoxes.length;
-
-            if (count > 0) {
-                deleteBtn.classList.remove('hidden');
-                footerStatus.innerHTML = `<span class="text-blue-600 font-bold"><i class="fas fa-check-circle mr-2"></i>${count} asset${count > 1 ? 's' : ''} selected</span>`;
-            } else {
-                deleteBtn.classList.add('hidden');
-                // Call updateFooterStatus to restore the "Showing X - Y of Z" text
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                updateFooterStatus(filteredAssets.length === 0 ? 0 : start + 1, Math.min(end, filteredAssets.length), filteredAssets.length);
-            }
-        }
-
-        function filterAssets() {
-            const searchInput = document.getElementById('searchInput');
-            const filter = searchInput.value.toLowerCase();
-            const clearBtn = document.getElementById('clearSearch');
-
-            if (filter.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
-
-            // Filter the master list
-            filteredAssets = allAssets.filter(asset => {
-                const name = (asset.Name || '').toLowerCase();
-                const serial = (asset.SerialNo || '').toLowerCase();
-                const category = (asset.Category || '').toLowerCase();
-                const location = (asset.Location || '').toLowerCase();
-                const dept = (asset.Department || '').toLowerCase();
-
-                return name.includes(filter) || serial.includes(filter) || category.includes(filter) || 
-                    location.includes(filter) || dept.includes(filter);
-            });
-
-            // RE-APPLY SORTING to the filtered results
-            filteredAssets.sort((a, b) => {
-                const dateA = new Date(a.CreatedDate || 0);
-                const dateB = new Date(b.CreatedDate || 0);
-                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-            });
-
-            displayPage(1);
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) selectAllCheckbox.checked = false;
-        }
-
-        // ONE unified listener for all setup
-        document.addEventListener('DOMContentLoaded', () => {
-            // Search logic
-            document.getElementById('searchInput').addEventListener('input', filterAssets);
-            document.getElementById('clearSearch').addEventListener('click', () => {
-                document.getElementById('searchInput').value = '';
-                filterAssets();
-            });
-
-            // "Jump to" logic
-            const jumpInput = document.getElementById('jumpPageInput');
-            if (jumpInput) {
-                jumpInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') jumpToPage();
-                });
-            }
-
-            // Selection logic
-            document.getElementById('selectAll').addEventListener('change', function() {
-                document.querySelectorAll('.asset-checkbox').forEach(cb => {
-                    cb.checked = this.checked;
-                });
-                updateDeleteButtonVisibility();
-            });
-
-            document.querySelector('tbody').addEventListener('change', (e) => {
-                if (e.target.classList.contains('asset-checkbox')) {
-                    updateDeleteButtonVisibility();
-                }
-            });
-        });
 
         function jumpToPage() {
             const input = document.getElementById('jumpPageInput');
@@ -432,253 +316,271 @@
             }
         }
 
-        //*********IMPORT BUTTON WITH TEMPLATE VALIDATION*******
+        function updatePageSize() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            displayPage(1);
+        }
+
+        function updateFooterStatus(start, end, total) {
+            const footerStatus = document.getElementById('footerStatus');
+            if (!footerStatus) return;
+            footerStatus.innerText = total === 0 ? "No assets found" : `Showing ${start} - ${end} of ${total} assets`;
+        }
+
+        // --- 5. SEARCH & SORTING ---
+        function filterAssets() {
+            const searchInput = document.getElementById('searchInput');
+            const filter = searchInput.value.toLowerCase();
+            const clearBtn = document.getElementById('clearSearch');
+
+            filter.length > 0 ? clearBtn.classList.remove('hidden') : clearBtn.classList.add('hidden');
+
+            filteredAssets = allAssets.filter(asset => {
+                const fields = [asset.Name, asset.SerialNo, asset.Category, asset.Location, asset.Department];
+                return fields.some(f => (f || '').toLowerCase().includes(filter));
+            });
+
+            // Re-apply current sort to filtered results
+            applySort();
+            displayPage(1);
+            
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) selectAll.checked = false;
+        }
+
+        function toggleSort() {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            const icon = sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+            document.getElementById('sortIcon').innerHTML = `<i class="fas ${icon} ml-1 text-blue-600"></i>`;
+            applySort();
+            displayPage(1);
+        }
+
+        function applySort() {
+            filteredAssets.sort((a, b) => {
+                const dateA = new Date(a.CreatedDate || 0);
+                const dateB = new Date(b.CreatedDate || 0);
+                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+        }
+
+        // --- 6. DROPDOWN LOGIC ---
+        // --- FIX: Updated Dropdown Logic ---
+        function toggleImportDropdown(event) {
+            event.stopPropagation();
+            const importDrop = document.getElementById('importDropdown');
+            const userDrop = document.getElementById('userDropdown');
+            
+            if (userDrop) userDrop.classList.add('hidden'); // Close user menu if open
+            importDrop.classList.toggle('hidden');
+        }
+
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const userDrop = document.getElementById('userDropdown');
+            const importDrop = document.getElementById('importDropdown');
+            
+            if (importDrop) importDrop.classList.add('hidden'); // Close import menu if open
+            userDrop.classList.toggle('hidden');
+        }
+
+        // Global click to close everything
+        window.addEventListener('click', (e) => {
+            const importDrop = document.getElementById('importDropdown');
+            const userDrop = document.getElementById('userDropdown');
+            
+            if (!e.target.closest('#importDropdown') && !e.target.closest('#userDropdown')) {
+                importDrop?.classList.add('hidden');
+                userDrop?.classList.add('hidden');
+            }
+        });
+
+        // --- FIX: Corrected Select All Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    // Find all checkboxes currently in the table body
+                    const checkboxes = document.querySelectorAll('tbody .asset-checkbox');
+                    checkboxes.forEach(cb => {
+                        cb.checked = this.checked;
+                    });
+                    updateDeleteButtonVisibility();
+                });
+            }
+
+            // Individual checkbox listener (Delegated to the table body)
+            const tableBody = document.querySelector('tbody');
+            tableBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('asset-checkbox')) {
+                    updateDeleteButtonVisibility();
+                    
+                    // Sync the "Select All" checkbox state
+                    const allCheckboxes = document.querySelectorAll('tbody .asset-checkbox');
+                    const checkedCount = document.querySelectorAll('tbody .asset-checkbox:checked').length;
+                    selectAllCheckbox.checked = (checkedCount === allCheckboxes.length && allCheckboxes.length > 0);
+                }
+            });
+        });
+
+        // --- 7. ACTIONS (DELETE, IMPORT, EXPORT) ---
+        function updateDeleteButtonVisibility() {
+            const deleteBtn = document.getElementById('deleteAssetBtn');
+            const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+            const count = checkedBoxes.length;
+
+            if (count > 0) {
+                deleteBtn.classList.remove('hidden');
+                document.getElementById('footerStatus').innerHTML = `<span class="text-blue-600 font-bold"><i class="fas fa-check-circle mr-2"></i>${count} selected</span>`;
+            } else {
+                deleteBtn.classList.add('hidden');
+            }
+        }
+
+        async function deleteSelectedAssets() {
+            const token = localStorage.getItem('token');
+            const ids = Array.from(document.querySelectorAll('.asset-checkbox:checked')).map(cb => parseInt(cb.value));
+
+            if (ids.length === 0 || !confirm(`Delete ${ids.length} asset(s)?`)) return;
+
+            const deleteBtn = document.getElementById('deleteAssetBtn');
+            deleteBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Deleting...`;
+
+            try {
+                const response = await fetch('http://172.28.192.16/asset/api/delete', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "ids": ids })
+                });
+                if ((await response.json()).status === 'success') {
+                    alert('Deleted successfully');
+                    loadAssets();
+                }
+            } catch (e) { alert('Delete failed.'); }
+            finally { deleteBtn.innerHTML = `<i class="fas fa-trash-alt mr-2"></i>Delete`; }
+        }
+
+        async function generateExcelReport(event) {
+            const reportBtn = event.currentTarget;
+            const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+            const selectedIds = Array.from(checkedBoxes).map(cb => cb.value.toString());
+
+            let dataToExport = selectedIds.length > 0 
+                ? allAssets.filter(a => selectedIds.includes(a.id.toString()))
+                : allAssets;
+
+            if (selectedIds.length === 0 && !confirm("Export full inventory?")) return;
+
+            reportBtn.disabled = true;
+            const originalContent = reportBtn.innerHTML;
+            reportBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+
+            setTimeout(() => {
+                try {
+                    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+                    XLSX.writeFile(workbook, `Asset_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+                } finally {
+                    reportBtn.disabled = false;
+                    reportBtn.innerHTML = originalContent;
+                }
+            }, 100);
+        }
+
+        // --- 8. IMPORT LOGIC ---
         async function handleFileImport(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = async (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // 1. Extract Headers for validation
-                    // Get range of sheet, then get first row only
-                    const range = XLSX.utils.decode_range(worksheet['!ref']);
-                    const uploadedHeaders = [];
-                    for (let C = range.s.c; C <= range.e.c; ++C) {
-                        const cell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })];
-                        if (cell) uploadedHeaders.push(cell.v);
-                    }
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Header Validation
+                const required = ["Name", "Category", "SerialNo", "Department", "Location"];
+                const firstRow = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+                const isValid = required.every(h => firstRow.includes(h));
 
-                    // 2. Define Required Template Headers
-                    const requiredHeaders = [
-                        "Name", "Category", "SerialNo", "Brand", "Model", 
-                        "Department", "Location", "StaffName", "StaffID"
-                    ];
+                if (!isValid) {
+                    alert("❌ Incorrect Template! Please use the official template.");
+                    return;
+                }
 
-                    // 3. Validate: Check if all required headers exist in the upload
-                    const isValid = requiredHeaders.every(header => uploadedHeaders.includes(header));
-
-                    if (!isValid) {
-                        alert("❌ Incorrect Template Error!\n\nThe uploaded file does not match the required format. Please use the official template.");
-                        event.target.value = ''; // Reset
-                        return;
-                    }
-
-                    // 4. Convert to JSON if valid
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                    if (jsonData.length === 0) {
-                        alert("The file appears to be empty.");
-                        return;
-                    }
-
-                    if (confirm(`Template Validated! ✅\nDetected ${jsonData.length} assets. Proceed with import?`)) {
-                        await uploadImportedAssets(jsonData);
-                    }
-                } catch (error) {
-                    console.error("Import Error:", error);
-                    alert("Failed to read the Excel file. Ensure it is a valid .xlsx or .xls file.");
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                if (confirm(`Import ${jsonData.length} assets?`)) {
+                    await uploadImportedAssets(jsonData);
                 }
             };
             reader.readAsArrayBuffer(file);
-            event.target.value = '';
         }
-
-        // Toggle the Import Dropdown visibility
-        function toggleImportDropdown(event) {
-            event.stopPropagation();
-            const importDropdown = document.getElementById('importDropdown');
-            const userDropdown = document.getElementById('userDropdown');
-            
-            // Close user dropdown if open
-            if (userDropdown) userDropdown.classList.add('hidden');
-            
-            importDropdown.classList.toggle('hidden');
-        }
-
-        // Add this to your existing window.onclick or create a new one to close dropdowns
-        window.addEventListener('click', () => {
-            const importDropdown = document.getElementById('importDropdown');
-            if (importDropdown) importDropdown.classList.add('hidden');
-        });
 
         async function uploadImportedAssets(assets) {
             const token = localStorage.getItem('token');
-            try {
-                const response = await fetch('http://172.28.192.16/asset/api/insert', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`, 
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify({ "assets": assets })
-                });
-
-                const result = await response.json();
-                if (result.status === 'success') {
-                    alert('Import Successful!');
-                    loadAssets(); // Refresh the table
-                } else {
-                    alert('Import failed: ' + result.message);
-                }
-            } catch (error) {
-                alert('Network error during import.');
-            }   
+            const res = await fetch('http://172.28.192.16/asset/api/insert', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "assets": assets })
+            });
+            if ((await res.json()).status === 'success') {
+                alert('Import Successful!');
+                loadAssets();
+            }
         }
 
         function downloadImportTemplate() {
-            const templateData = [{
-                "Name": "Example Laptop",
-                "Category": "Workstation",
-                "SerialNo": "SN123456",
-                "Brand": "Dell",
-                "Model": "Latitude 5420",
-                "Department": "IT",
-                "Location": "Head Office",
-                "StaffName": "John Doe",
-                "StaffID": 1234,
-                "IP_Address": "192.168.1.1",
-                "OS": "Windows 11",
-                "OS_Version": "22H2",
-                "Memory_Size": "16GB",
-                "Memory_Used": "4GB",
-                "Memory_Available": "12GB",
-                "Bandwidth": "",
-                "Description": "New hire laptop",
-                "Functionality": "Functional",
-                "Sensitivity": "Internal",
-                "Backup_Location": "Cloud"
-            }];
-
-            const worksheet = XLSX.utils.json_to_sheet(templateData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Import Template");
-            XLSX.writeFile(workbook, "Asset_Import_Template.xlsx");
+            const data = [{"Name": "Laptop", "Category": "IT", "SerialNo": "SN001", "Department": "HR", "Location": "Main Office"}];
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "Asset_Import_Template.xlsx");
         }
 
-        //**** DELETE FUNCTION ****//
-        async function deleteSelectedAssets() {
-            const tableBody = document.querySelector('tbody');
+        // --- 9. EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Fetch data from localStorage
+            const userName = localStorage.getItem('user'); // Matches 'user' key from login
             const token = localStorage.getItem('token');
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
-            const idsToDelete = checkedBoxes.map(cb => parseInt(cb.value));
 
-            if (idsToDelete.length === 0) return;
-            if (!confirm(`Permanently delete ${idsToDelete.length} asset(s)?`)) return;
-
-            try {
-                const deleteBtn = document.getElementById('deleteAssetBtn');
-                deleteBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Deleting...`;
-                deleteBtn.disabled = true;
-
-                const response = await fetch('http://172.28.192.16/asset/api/delete', {
-                    method: 'POST', 
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ "ids": idsToDelete })
-                });
-
-                const result = await response.json();
-                if (result.status === 'success') {
-                    alert('Deleted successfully');
-                    document.getElementById('selectAll').checked = false;
-                    loadAssets(); 
-                } else {
-                    alert('Error: ' + result.message);
-                    displayPage(currentPage); // Refresh current view
-                }
-            } catch (error) {
-                alert('Connection error.');
-                displayPage(currentPage);
-            }
-        }
-
-        function updatePageSize() {
-            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
-            displayPage(1);
-        }
-
-        //**** EXCEL REPORT GENERATION ****//
-        async function generateExcelReport() {
-            const reportBtn = event.currentTarget; // Captures the button clicked
-            const originalContent = reportBtn.innerHTML;
-            const tableBody = document.querySelector('tbody');
-            
-            // 1. Selection Logic
-            const checkedBoxes = Array.from(tableBody.querySelectorAll('.asset-checkbox:checked'));
-            const selectedIds = checkedBoxes.map(cb => cb.value.toString());
-
-            let dataToExport = [];
-            if (selectedIds.length > 0) {
-                dataToExport = allAssets.filter(asset => selectedIds.includes(asset.id.toString()));
-            } else {
-                const confirmAll = confirm("No assets selected. Export the FULL inventory?");
-                if (!confirmAll) return;
-                dataToExport = allAssets; // Export everything in the master list
+            // 2. Check Authentication - Redirect if not logged in
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
             }
 
-            // 2. Show Loading State
-            reportBtn.disabled = true;
-            reportBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+            // 3. Update the UI with the actual User (e.g., FPC00123)
+            const nameDisplay = document.getElementById('displayUserName');
+            if (nameDisplay && userName) {
+                nameDisplay.textContent = userName;
+            }
 
-            // 3. Process Excel (Wrapped in setTimeout so the spinner actually shows up)
-            setTimeout(() => {
-                try {
-                    const excelRows = dataToExport.map(asset => ({
-                        "Asset ID": asset.id || '',
-                        "Asset Name": asset.Name || '',
-                        "Category": asset.Category || '',
-                        "Brand": asset.Brand || '',
-                        "Model": asset.Model || '',
-                        "Serial Number": asset.SerialNo || '',
-                        "Department": asset.Department || '',
-                        "Location": asset.Location || '',
-                        "Staff Name": asset.StaffName || '',
-                        "Staff ID": asset.StaffID || '',
-                        "Operating System": asset.OS || '',
-                        "OS Version": asset.OS_Version || '',
-                        "IP Address": asset.IP_Address || '',
-                        "Functionality": asset.Functionality || '',
-                        "Sensitivity": asset.Sensitivity || '',
-                        "Memory Total (MB)": asset.Memory_Size || '',
-                        "Memory Used (MB)": asset.Memory_Used || '',
-                        "Memory Available (MB)": asset.Memory_Available || '',
-                        "Bandwidth": asset.Bandwidth || '',
-                        "Backup Location": asset.Backup_Location || '',
-                        "Description": asset.Description || ''
-                    }));
+            // 4. Continue with loading the assets
+            loadAssets();
 
-                    const worksheet = XLSX.utils.json_to_sheet(excelRows);
-                    
-                    // Auto-size columns
-                    const wscols = Object.keys(excelRows[0] || {}).map(key => ({ wch: key.length + 15 }));
-                    worksheet['!cols'] = wscols;
+            document.getElementById('searchInput').addEventListener('input', filterAssets);
+            document.getElementById('clearSearch').addEventListener('click', () => {
+                document.getElementById('searchInput').value = '';
+                filterAssets();
+            });
 
-                    const workbook = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(workbook, worksheet, "Full Asset Report");
+            const jumpInput = document.getElementById('jumpPageInput');
+            if (jumpInput) {
+                jumpInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') jumpToPage(); });
+            }
 
-                    const date = new Date().toISOString().split('T')[0];
-                    XLSX.writeFile(workbook, `Asset_Inventory_Detailed_${date}.xlsx`);
+            document.getElementById('selectAll').addEventListener('change', function() {
+                document.querySelectorAll('.asset-checkbox').forEach(cb => cb.checked = this.checked);
+                updateDeleteButtonVisibility();
+            });
 
-                } catch (error) {
-                    console.error("Excel Error:", error);
-                    alert("Failed to generate report.");
-                } finally {
-                    // 4. Restore Button State
-                    reportBtn.disabled = false;
-                    reportBtn.innerHTML = originalContent;
-                }
-            }, 100); // 100ms delay is enough for the UI to update
-        }
-        
-        function editAsset(id) { 
-            console.log("Editing Asset ID:", id); 
-        }
+            document.querySelector('tbody').addEventListener('change', (e) => {
+                if (e.target.classList.contains('asset-checkbox')) updateDeleteButtonVisibility();
+            });
+        });
     </script>
+    
 </body>
 </html>
