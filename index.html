@@ -532,11 +532,33 @@
         }
 
         function downloadImportTemplate() {
-            const data = [{"Name": "Laptop", "Category": "IT", "SerialNo": "SN001", "Department": "HR", "Location": "Main Office"}];
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, "Asset_Import_Template.xlsx");
+            const templateData = [{
+                "Name": "Example Laptop",
+                "Category": "Workstation",
+                "SerialNo": "SN123456",
+                "Brand": "Dell",
+                "Model": "Latitude 5420",
+                "Department": "IT",
+                "Location": "Head Office",
+                "StaffName": "John Doe",
+                "StaffID": 1234,
+                "IP_Address": "192.168.1.1",
+                "OS": "Windows 11",
+                "OS_Version": "22H2",
+                "Memory_Size": "16GB",
+                "Memory_Used": "4GB",
+                "Memory_Available": "12GB",
+                "Bandwidth": "",
+                "Description": "New hire laptop",
+                "Functionality": "Functional",
+                "Sensitivity": "Internal",
+                "Backup_Location": "Cloud"
+            }];
+
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Import Template");
+            XLSX.writeFile(workbook, "Asset_Import_Template.xlsx");
         }
 
         // --- 9. EVENT LISTENERS ---
